@@ -76,7 +76,7 @@ Findings from analysing Zwift 1.124.0 (build 167761) on macOS:
 
 ### Tested in game
 
-On an M2 Max with Zwift 1.124.0, with the Max preset, the log showed every `set` line and `sres 4096x4096` accepted and `Changed resolution to 5120 x 2880`, with the FPS counter on screen. With these settings the log also reported `loading shader GNViewUpdateLights[5][5].2 failed!` once, when entering Watopia. That variant is requested by a world material (it's named in the material's `shader` and `permutation` fields), not by the settings themselves, and the game falls back and keeps running; whether it also appears with Zwift's own profiles hasn't been checked yet.
+On an M2 Max with Zwift 1.124.0, with the Max preset, the log showed every `set` line and `sres 4096x4096` accepted and `Changed resolution to 5120 x 2880`, with the FPS counter on screen. With these settings the log also reported `loading shader GNViewUpdateLights[5][5].2 failed!` once, when entering Watopia. That variant is requested by a world material (it's named in the material's `shader` and `permutation` fields), not by the settings themselves, and the game falls back and keeps running. A third launch with Zwift's own profiles and resolution showed the same error at the same point, so it comes from the game, not from these settings.
 - After saving, launch Zwift once and check the **Your Zwift** section: it lists the commands the game ran and any variable it didn't recognize.
 
 ## License
