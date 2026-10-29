@@ -63,14 +63,17 @@ snapshot.read(log: """
 [17:48:56] Unknown command "listvars"
 [17:48:56] > set gBloom=x
 [17:48:56] Syntax Error.  USAGE: set VARNAME=VALUE
+[17:48:56] > sres 8192x8192
+[17:48:56] Error with resolution values (8192 x 8192)
 [17:48:56] > res 3840x2160
 [17:48:56] Graphics Renderer: Apple M2 Max
 """)
 check("last profile wins", snapshot.profileName == "ultra")
 check("gpu read", snapshot.gpu == "Apple M2 Max")
-check("commands of the last launch only", snapshot.lastLaunchCommands == ["res 1920x1080(0x)", "set gSSAO=1", "set nAIBikes=24", "set gShowFPS=1", "set gBloom=x", "res 3840x2160"])
+check("commands of the last launch only", snapshot.lastLaunchCommands == ["res 1920x1080(0x)", "set gSSAO=1", "set nAIBikes=24", "set gShowFPS=1", "set gBloom=x", "sres 8192x8192", "res 3840x2160"])
 check("rejected lines reported, syntax error of an unknown command not blamed on the previous line",
-      snapshot.rejected == ["nAIBikes", "listvars", "a line with a syntax error"])
+      snapshot.rejected == ["nAIBikes", "listvars", "a line with a syntax error", "sres 8192x8192"])
+check("shadow resolution capped at 4096 like the game", Catalog.validated(["sres": "8192"]).isEmpty && Catalog.validated(["sres": "4096"]).count == 1)
 // 8. Validation rejects out-of-range and snaps sliders
 check("invalid values dropped", Catalog.validated(["sres": "3000", "gSSR": "2", "gSSAO": "1", "foo": "1"]).isEmpty)
 check("negative LOD bias rejected (the game turns it into 2)", Catalog.validated(["gLODBias": "-1"]).isEmpty)

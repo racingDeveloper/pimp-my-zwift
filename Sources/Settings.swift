@@ -132,8 +132,9 @@ enum Catalog {
                    ]), command: .renderResolution),
         tweak("gFXAA", "FXAA", .resolution),
         SettingDef(key: "sres", title: L("Shadow resolution"),
-                   help: L("Written as \"sres SIZExSIZE\". Zwift's profiles use 512 (basic) to 2048 (ultra)."),
-                   section: .resolution, control: .choice(["1024", "2048", "4096", "8192"].map { Option(value: $0, label: "\($0)×\($0)") }),
+                   help: L("Written as \"sres SIZExSIZE\". Zwift's profiles use 512 (basic) to 2048 (ultra); the game accepts 256 to 4096."),
+                   // The game rejects sides outside 256–4096 ("Error with resolution values").
+                   section: .resolution, control: .choice(["1024", "2048", "4096"].map { Option(value: $0, label: "\($0)×\($0)") }),
                    command: .shadowResolution),
         tweak("gForceBikeShadows", L("Shadows on every bike"), .resolution),
         tweak("g_BikeMaxShadowCascade", L("Bike shadow cascades"), .resolution,

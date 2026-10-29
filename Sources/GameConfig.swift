@@ -178,6 +178,8 @@ struct GameSnapshot {
                 rejected.append(String(unknown.1))
             } else if let failed = line.firstMatch(of: #/Error setting ([^.]+)\./#) {
                 rejected.append(String(failed.1))
+            } else if line.contains("Error with resolution values"), let last = lastLaunchCommands.last {
+                rejected.append(last)
             } else if line.contains("Syntax Error") {
                 syntaxError = true
             }
