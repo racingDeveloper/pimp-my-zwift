@@ -18,6 +18,12 @@ check("shadow line before tweakables", max.lines.first == "sres 4096x4096")
 check("tweakables written as set", max.lines.contains("set gSSR=1") && max.lines.contains("set g_BikeMaxShadowCascade=2"))
 check("ends with a newline", composed.hasSuffix("\n") && !composed.hasSuffix("\n\n"))
 check("missing trailing newline handled", ProfileFile.compose("set gFXAA=1", lines: ["set gSSR=1"]) == "set gFXAA=1\nset gSSR=1\n")
+// Zwift's own profiles use Windows line endings, and basic.txt has no final one
+check("windows line endings kept", ProfileFile.compose("sres 2048x2048\r\nset gFXAA=1\r\n", lines: ["set gSSR=1", "set gSunRays=1"])
+      == "sres 2048x2048\r\nset gFXAA=1\r\nset gSSR=1\r\nset gSunRays=1\r\n")
+check("windows file without final newline", ProfileFile.compose("sres 512x512\r\nset gLODBias=1", lines: ["set gSSR=1"])
+      == "sres 512x512\r\nset gLODBias=1\r\nset gSSR=1\r\n")
+check("windows profile parsed", ProfileFile.values(in: "res 1920x1080(0x)\r\nsres 2048x2048\r\nset gFXAA=1\r\n") == ["msaa": "0", "sres": "2048", "gFXAA": "1"])
 // 3. The original is recovered from the backup only while the file still holds what the app wrote
 check("our own file → backup", ProfileFile.original(current: composed, backup: ultra, lastWritten: composed) == ultra)
 let updated = "res 1920x1080(0x)\nsres 2048x2048\nset gSSAO=1\n"

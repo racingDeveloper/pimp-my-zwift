@@ -41,10 +41,13 @@ enum ProfileFile {
     /// The original profile followed by the app's lines: later lines win, so ours override the game's.
     static func compose(_ original: String, lines: [String]) -> String {
         guard !lines.isEmpty else { return original }
+        // Zwift ships its profiles with Windows line endings: the app's lines use the same ones as the file.
+        let newline = original.contains("\r\n") ? "\r\n" : "\n"
         var out = original
-        while out.hasSuffix("\n") { out.removeLast() }
-        if !out.isEmpty { out += "\n" }
-        return out + lines.joined(separator: "\n") + "\n"
+        // "\r\n" is a single Character in Swift, so this also drops Windows line endings.
+        while out.last?.isNewline == true { out.removeLast() }
+        if !out.isEmpty { out += newline }
+        return out + lines.joined(separator: newline) + newline
     }
 
     /// The pristine profile: the backup if the file still holds what the app wrote last,
