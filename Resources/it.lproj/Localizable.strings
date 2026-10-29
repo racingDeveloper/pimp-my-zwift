@@ -1,0 +1,156 @@
+/* Italian translation. Keys are the English strings used in Sources/.
+   Check coverage with: python3 scripts/extract_strings.py --check Resources/it.lproj/Localizable.strings */
+
+/* App, navigation and toolbar */
+"Overview" = "Panoramica";
+"Settings" = "Impostazioni";
+"Profile preview" = "Anteprima profilo";
+"Search" = "Ricerca";
+"Search settings" = "Cerca impostazioni";
+"Save" = "Salva";
+"Launch Zwift" = "Avvia Zwift";
+"Writes the settings without launching the game" = "Scrive le impostazioni senza avviare il gioco";
+"Writes the settings and launches Zwift (⌘R)" = "Scrive le impostazioni e avvia Zwift (⌘R)";
+"Profiles found" = "Profili trovati";
+"Profiles not found" = "Profili non trovati";
+"Zwift running" = "Zwift in esecuzione";
+"Zwift closed" = "Zwift chiuso";
+"Copy" = "Copia";
+"Dismiss notice" = "Chiudi avviso";
+
+/* Overview */
+"Preset" = "Preset";
+"A preset fills in every section; you can then fine-tune individual settings." = "Un preset riempie tutte le sezioni; poi puoi ritoccare le singole voci.";
+"What will be applied" = "Cosa verrà applicato";
+"Shadow resolution" = "Risoluzione delle ombre";
+"MSAA" = "MSAA";
+"Forced values" = "Valori forzati";
+"%@ of %@" = "%@ su %@";
+"game decides" = "decide il gioco";
+"not written: resolution unknown" = "non scritto: risoluzione sconosciuta";
+"%@× at %@" = "%@× a %@";
+"Launch" = "Avvio";
+"Quit Pimp My Zwift after launching" = "Chiudi Pimp My Zwift dopo l'avvio";
+"The settings are appended to all of Zwift's graphics profiles, so they apply whichever one the game picks. A .pimpmyzwift.bak copy of each original profile is kept, and \"Game default\" restores it. A Zwift update can replace the profiles: launching from here writes them again." = "Le impostazioni vengono aggiunte a tutti i profili grafici di Zwift, così valgono qualunque profilo scelga il gioco. Di ogni profilo originale viene tenuta una copia .pimpmyzwift.bak, che \"Default del gioco\" ripristina. Un aggiornamento di Zwift può sostituire i profili: avviando da qui vengono riscritti.";
+
+/* Your Zwift */
+"Your Zwift" = "Il tuo Zwift";
+"Zwift version" = "Versione di Zwift";
+"GPU" = "GPU";
+"Profile in use" = "Profilo in uso";
+"Resolution (game menu)" = "Risoluzione (menu del gioco)";
+"unknown" = "sconosciuto";
+"Zwift didn't recognize: %@" = "Zwift non ha riconosciuto: %@";
+"Commands applied at the last launch (%@)" = "Comandi applicati all'ultimo avvio (%@)";
+"Read from Zwift's log and prefs.xml. Launch the game once after saving to check that every line was applied." = "Letto dal log di Zwift e da prefs.xml. Dopo aver salvato, avvia il gioco una volta per verificare che ogni riga sia stata applicata.";
+
+/* Presets */
+"Max" = "Massimo";
+"Everything Zwift can do on a powerful Mac: 4096 shadows, ambient occlusion, reflections and sun rays, no radial blur." = "Tutto quello che Zwift sa fare su un Mac potente: ombre a 4096, occlusione ambientale, riflessi e raggi del sole, senza sfocatura radiale.";
+"Balanced" = "Bilanciato";
+"Like Zwift's ultra profile, with sun rays guaranteed and no radial blur." = "Come il profilo ultra di Zwift, con i raggi del sole garantiti e senza sfocatura radiale.";
+"Performance" = "Prestazioni";
+"Zwift's medium profile with smaller shadows, for less powerful Macs or steadier FPS." = "Il profilo medium di Zwift con ombre più piccole, per Mac meno potenti o FPS più stabili.";
+"Game default" = "Default del gioco";
+"No changes: Zwift's own profiles, as if this app weren't there." = "Nessuna modifica: i profili originali di Zwift, come se questa app non ci fosse.";
+"Custom" = "Personalizzato";
+"Hand-tuned values, remembered for the next launches." = "Valori scelti a mano, ricordati per i prossimi avvii.";
+
+/* Sections */
+"Anti-aliasing & shadows" = "Antialiasing e ombre";
+"Detail" = "Dettaglio";
+"Effects" = "Effetti";
+"HUD & display" = "HUD e schermo";
+"Zwift picks a graphics profile (basic, medium, high or ultra) from its own list of GPUs, then applies the resolution chosen in its menu. The menu has no anti-aliasing or shadow settings." = "Zwift sceglie un profilo grafico (basic, medium, high o ultra) dalla sua lista di GPU, poi applica la risoluzione scelta nel suo menu. Il menu non ha impostazioni per antialiasing e ombre.";
+"Zwift's lower profiles halve the foliage and raise the level-of-detail bias; ultra leaves both at the game's defaults." = "I profili più bassi di Zwift dimezzano la vegetazione e alzano il bias del livello di dettaglio; ultra li lascia entrambi ai valori del gioco.";
+"Force nothing in this section" = "Non forzare niente in questa sezione";
+"Let the game decide every setting in this section" = "Lascia decidere al gioco tutte le voci di questa sezione";
+"No settings match “%@”." = "Nessuna impostazione corrisponde a “%@”.";
+
+/* Rows and info popover */
+"Don't force" = "Non forzare";
+"Force" = "Forza";
+"Force a value" = "Forza un valore";
+"Back to the game's value" = "Torna al valore del gioco";
+"What it does" = "Cosa fa";
+"About %@" = "Informazioni su %@";
+"Not forced" = "Non forzato";
+"Key" = "Chiave";
+"Off" = "Off";
+"On" = "On";
+"Used by Zwift's own profiles" = "Usato dai profili di Zwift";
+"Present in the game, effect not verified" = "Presente nel gioco, effetto non verificato";
+"Experimental" = "Sperimentale";
+"profile %@: %@" = "profilo %@: %@";
+"game default: %@" = "default del gioco: %@";
+"decided by the game" = "deciso dal gioco";
+"Tweakable %@, written as \"set %@=…\"." = "Variabile %@, scritta come \"set %@=…\".";
+"Tweakable %@ (decimal number), written as \"set %@=…\"." = "Variabile %@ (numero decimale), scritta come \"set %@=…\".";
+
+/* Setting titles */
+"Bike shadow cascades" = "Cascate d'ombra delle bici";
+"Shadows on every bike" = "Ombre su tutte le bici";
+"Level-of-detail bias" = "Bias del livello di dettaglio";
+"-1 · More detail" = "-1 · Più dettaglio";
+"0 · Normal" = "0 · Normale";
+"1 · Less detail" = "1 · Meno dettaglio";
+"2 · Much less detail" = "2 · Molto meno dettaglio";
+"Foliage density" = "Densità della vegetazione";
+"Ambient occlusion (SSAO)" = "Occlusione ambientale (SSAO)";
+"Screen-space reflections" = "Riflessi in screen space";
+"Simplified reflections" = "Riflessi semplificati";
+"Sun rays" = "Raggi del sole";
+"Bloom" = "Bloom";
+"Bloom strength" = "Intensità del bloom";
+"Radial blur" = "Sfocatura radiale";
+"Vignette" = "Vignettatura";
+"Auto exposure" = "Esposizione automatica";
+"Headlights" = "Fari";
+"Headlight intensity" = "Intensità dei fari";
+"FPS counter" = "Contatore FPS";
+"Show the HUD" = "Mostra l'HUD";
+"Springy camera" = "Telecamera elastica";
+"Hide the mouse pointer" = "Nascondi il puntatore";
+"Hide the pointer after" = "Nascondi il puntatore dopo";
+"%@ s" = "%@ s";
+
+/* Setting help */
+"Written as \"res WIDTHxHEIGHT(Nx)\", using the resolution chosen in Zwift's menu (USER_RESOLUTION_PREF in prefs.xml)." = "Scritto come \"res LARGHEZZAxALTEZZA(Nx)\", con la risoluzione scelta nel menu di Zwift (USER_RESOLUTION_PREF in prefs.xml).";
+"Written as \"sres SIZExSIZE\". Zwift's profiles use 512 (basic) to 2048 (ultra)." = "Scritto come \"sres LATOxLATO\". I profili di Zwift vanno da 512 (basic) a 2048 (ultra).";
+
+/* Setting details */
+"Multisample anti-aliasing smooths the edges of geometry (bikes, riders, barriers) better than FXAA, at a high GPU cost. Zwift's profiles turn it off. The resolution set in Zwift's menu is applied after the profile without an MSAA value: whether MSAA survives that is unverified. Check the log for \"Changed resolution\". If the game already renders at a higher resolution than the display, the gain is small." = "L'antialiasing multisample leviga i bordi della geometria (bici, ciclisti, transenne) meglio dell'FXAA, con un costo alto per la GPU. I profili di Zwift lo spengono. La risoluzione scelta nel menu di Zwift viene applicata dopo il profilo senza un valore MSAA: non è verificato che l'MSAA sopravviva. Controlla nel log le righe \"Changed resolution\". Se il gioco renderizza già a una risoluzione più alta dello schermo, il guadagno è piccolo.";
+"Fast anti-aliasing applied to the final image: smooths edges almost for free, but makes the image a little softer. On in every Zwift profile." = "Antialiasing veloce applicato all'immagine finale: leviga i bordi quasi gratis, ma rende l'immagine un po' più morbida. Acceso in tutti i profili di Zwift.";
+"Size of the sun's shadow map. 4096 makes the shadows of trees, riders and buildings on the road noticeably sharper; 8192 is very heavy on GPU memory and goes beyond what Zwift itself uses." = "Dimensione della mappa delle ombre del sole. 4096 rende molto più nitide le ombre di alberi, ciclisti ed edifici sulla strada; 8192 pesa molto sulla memoria della GPU e va oltre quello che usa Zwift.";
+"Draws shadows for every bike, not only the closest ones. Noticeable in big groups and events; the cost grows with the number of riders on screen." = "Disegna le ombre di tutte le bici, non solo di quelle più vicine. Si nota nei gruppi numerosi e negli eventi; il costo cresce con il numero di ciclisti sullo schermo.";
+"How many shadow cascades bikes are drawn into (game default 1). Higher values could keep bike shadows at greater distances; the effect wasn't observed." = "In quante cascate d'ombra vengono disegnate le bici (default del gioco 1). Valori più alti potrebbero mantenere le ombre delle bici più lontano; l'effetto non è stato osservato.";
+"When objects switch to simpler models. Zwift's basic and medium profiles use 1; ultra leaves 0. -1 is beyond what Zwift uses: it might keep full detail further away, or have no effect." = "Quando gli oggetti passano a modelli più semplici. I profili basic e medium di Zwift usano 1; ultra lascia 0. -1 va oltre quello che usa Zwift: potrebbe mantenere il dettaglio pieno più lontano, o non avere effetto.";
+"How many trees, bushes and plants are drawn. Zwift's basic and medium profiles use 0.5; the game default is 1. Values above 1 are beyond what Zwift uses." = "Quanti alberi, cespugli e piante vengono disegnati. I profili basic e medium di Zwift usano 0.5; il default del gioco è 1. Valori sopra 1 vanno oltre quello che usa Zwift.";
+"Soft shading in corners and where objects touch the ground: gives depth to scenery and riders. Off by default, on in Zwift's high and ultra profiles. Moderate GPU cost." = "Ombreggiatura morbida negli angoli e dove gli oggetti toccano il suolo: dà profondità a paesaggio e ciclisti. Spenta di default, accesa nei profili high e ultra di Zwift. Costo moderato per la GPU.";
+"Reflections computed from what's on screen: water, wet roads after the rain, shiny surfaces. Off by default and never turned on by Zwift's profiles." = "Riflessi calcolati da ciò che è sullo schermo: acqua, strade bagnate dopo la pioggia, superfici lucide. Spenti di default e mai accesi dai profili di Zwift.";
+"A cheaper reflection model. Zwift's basic and medium profiles turn it on; leave it off for the best image." = "Un modello di riflessi più economico. I profili basic e medium di Zwift lo accendono; lascialo spento per l'immagine migliore.";
+"Light shafts when the sun shines through trees and buildings. On by default, off in Zwift's basic and medium profiles." = "Fasci di luce quando il sole filtra tra alberi ed edifici. Accesi di default, spenti nei profili basic e medium di Zwift.";
+"Glow around the sun and strong lights. Off gives a flatter, more neutral image." = "Alone intorno al sole e alle luci forti. Spento dà un'immagine più piatta e neutra.";
+"How strong the glow is (game default 0.5). Only used when bloom is on." = "Quanto è forte l'alone (default del gioco 0.5). Usato solo con il bloom acceso.";
+"Blur toward the screen edges, typically when going fast. Many prefer it off for a sharper image during long rides." = "Sfocatura verso i bordi dello schermo, tipicamente quando si va veloci. Molti la preferiscono spenta per un'immagine più nitida nelle uscite lunghe.";
+"Darkens the corners of the image, like a camera lens. Off gives a more even image." = "Scurisce gli angoli dell'immagine, come un obiettivo fotografico. Spenta dà un'immagine più uniforme.";
+"Adapts brightness when going from bright to dark areas (tunnels, forests), like an eye. Off keeps the exposure fixed." = "Adatta la luminosità passando da zone chiare a zone scure (gallerie, boschi), come un occhio. Spenta mantiene l'esposizione fissa.";
+"The bikes' front lights at dusk and night. On by default, off in Zwift's basic and medium profiles." = "Le luci anteriori delle bici al tramonto e di notte. Accese di default, spente nei profili basic e medium di Zwift.";
+"Brightness of the headlights (game default 0.5)." = "Luminosità dei fari (default del gioco 0.5).";
+"Zwift's own frame rate counter on screen. Handy to see what each setting costs." = "Il contatore di frame rate di Zwift sullo schermo. Utile per vedere quanto costa ogni impostazione.";
+"Off hides power, speed, the map and the other panels: useful for clean screenshots or videos, not for training." = "Spento nasconde potenza, velocità, mappa e gli altri pannelli: utile per screenshot o video puliti, non per allenarsi.";
+"The camera follows the rider with a little spring, smoothing turns and accelerations. Off keeps it rigidly locked." = "La telecamera segue il ciclista con un po' di elasticità, ammorbidendo curve e accelerazioni. Spenta resta fissa in modo rigido.";
+"Hides the mouse pointer when it doesn't move." = "Nasconde il puntatore del mouse quando non si muove.";
+"How long the pointer stays visible after the last movement (game default 5 seconds)." = "Quanto resta visibile il puntatore dopo l'ultimo movimento (default del gioco 5 secondi).";
+
+/* Notices and errors */
+"Settings written to Zwift's graphics profiles." = "Impostazioni scritte nei profili grafici di Zwift.";
+"Saved. Zwift is open: the profile is read at launch, so this applies from the next one." = "Salvato. Zwift è aperto: il profilo viene letto all'avvio, quindi vale dal prossimo.";
+"Zwift is already open: quit it and relaunch it from here to apply the settings." = "Zwift è già aperto: chiudilo e riavvialo da qui per applicare le impostazioni.";
+"Zwift launched." = "Zwift avviato.";
+"Zwift isn't installed in /Applications." = "Zwift non è installato in /Applicazioni.";
+"Zwift's graphics profiles weren't found in ~/Library/Application Support/Zwift: install Zwift and launch it at least once." = "I profili grafici di Zwift non sono stati trovati in ~/Library/Application Support/Zwift: installa Zwift e avvialo almeno una volta.";
+"Couldn't open %@.txt for writing: %@" = "Impossibile aprire %@.txt in scrittura: %@";
+"Couldn't write %@.txt: %@" = "Impossibile scrivere %@.txt: %@";
+"No changes: Zwift's profiles are restored and the game decides." = "Nessuna modifica: i profili di Zwift vengono ripristinati e decide il gioco.";
+"Appended to %@" = "Aggiunto in fondo a %@";
