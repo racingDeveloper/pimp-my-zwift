@@ -158,10 +158,16 @@ enum Catalog {
         tweak("gAutoExposure", L("Auto exposure"), .effects),
         tweak("gHeadlight", L("Headlights"), .effects),
         tweak("gHeadlightIntensity", L("Headlight intensity"), .effects, .slider(min: 0, max: 1.5, step: 0.05, decimals: 2, unit: "")),
+        tweak("g_FireworkNightShowAlwaysOn", L("Fireworks every night"), .effects),
 
         // HUD & display
         tweak("gShowFPS", L("FPS counter"), .display),
         tweak("g_bDrawHud", L("Show the HUD"), .display),
+        tweak("g_elevationProfile_DrawDistanceCM", L("Elevation profile distance"), .display, .choice([
+            Option(value: "100000", label: "1 km"), Option(value: "200000", label: "2 km"),
+            Option(value: "300000", label: "3 km"), Option(value: "500000", label: "5 km"),
+        ])),
+        tweak("g_elevationProfile_Height", L("Elevation profile height"), .display, .slider(min: 60, max: 150, step: 1, decimals: 0, unit: "")),
         tweak("gUseSpringyCamera", L("Springy camera"), .display),
         tweak("g_ShouldHideMouseAfterTimeout", L("Hide the mouse pointer"), .display),
         tweak("g_HideMouseAfterMS", L("Hide the pointer after"), .display,

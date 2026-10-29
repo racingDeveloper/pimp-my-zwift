@@ -71,7 +71,6 @@
 "Key" = "Chiave";
 "Off" = "Off";
 "On" = "On";
-"Used by Zwift's own profiles" = "Usato dai profili di Zwift";
 "Read by the game's code, effect not seen in game yet" = "Letto dal codice del gioco, effetto non ancora visto in gioco";
 "Experimental" = "Sperimentale";
 "profile %@: %@" = "profilo %@: %@";
@@ -156,3 +155,12 @@
 "Zwift's prefs.xml has no resolution yet: pick one in Zwift's menu once." = "prefs.xml di Zwift non ha ancora una risoluzione: scegline una nel menu di Zwift almeno una volta.";
 "Zwift rejected: %@" = "Zwift ha rifiutato: %@";
 "a line with a syntax error" = "una riga con un errore di sintassi";
+
+/* Elevation profile and fireworks */
+"Verified: used by Zwift's profiles or checked in game" = "Verificato: usato dai profili di Zwift o controllato in gioco";
+"Elevation profile distance" = "Distanza del profilo altimetrico";
+"Elevation profile height" = "Altezza del profilo altimetrico";
+"Fireworks every night" = "Fuochi d'artificio ogni notte";
+"How much road ahead the small elevation profile in the HUD shows (game default 1 km). Checked in game: at 3 km the profile shows the climbs coming up well in advance." = "Quanta strada mostra in avanti il piccolo profilo altimetrico nell'HUD (default del gioco 1 km). Controllato in gioco: a 3 km il profilo mostra le salite in arrivo con largo anticipo.";
+"Height of the small elevation profile in the HUD (game default 76). Checked in game: a taller profile is easier to read from the bike." = "Altezza del piccolo profilo altimetrico nell'HUD (default del gioco 76). Controllato in gioco: un profilo più alto si legge meglio dalla bici.";
+"Fireworks in the sky every night, not only during special events. Night follows the world's clock, which comes from Zwift's servers and can't be changed: the fireworks only show when you ride while it's night in that world." = "Fuochi d'artificio in cielo ogni notte, non solo durante gli eventi speciali. La notte segue l'orologio del mondo, che arriva dai server di Zwift e non si può cambiare: i fuochi si vedono solo se pedali mentre in quel mondo è notte.";

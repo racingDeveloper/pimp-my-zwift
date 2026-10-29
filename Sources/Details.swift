@@ -2,7 +2,7 @@ import Foundation
 
 /// How certain it is that a setting has an effect in Zwift.
 enum Effectiveness {
-    /// Zwift's own graphics profiles use it: the game reads it at every launch.
+    /// Zwift's own graphics profiles use it, or it was checked in game (log and screen).
     case verified
     /// Zwift's profiles never set it, but the game's code reads it: the effect wasn't seen in game yet.
     case registered
@@ -11,7 +11,7 @@ enum Effectiveness {
 
     var label: String {
         switch self {
-        case .verified: return L("Used by Zwift's own profiles")
+        case .verified: return L("Verified: used by Zwift's profiles or checked in game")
         case .registered: return L("Read by the game's code, effect not seen in game yet")
         case .experimental: return L("Experimental")
         }
@@ -40,7 +40,8 @@ extension Catalog {
         "gSSR": "0", "gSimpleReflections": "0", "gSunRays": "1", "gBloom": "1", "gBloomStrength": "0.50",
         "gVignette": "1", "gAutoExposure": "1", "gHeadlight": "1", "gHeadlightIntensity": "0.50",
         "gShowFPS": "0", "g_bDrawHud": "1", "gUseSpringyCamera": "1", "g_ShouldHideMouseAfterTimeout": "1",
-        "g_HideMouseAfterMS": "5000",
+        "g_HideMouseAfterMS": "5000", "g_elevationProfile_DrawDistanceCM": "100000", "g_elevationProfile_Height": "76",
+        "g_FireworkNightShowAlwaysOn": "0",
     ]
 
     static func info(for key: String) -> SettingInfo {
@@ -73,5 +74,8 @@ extension Catalog {
         "gUseSpringyCamera": .init(effect: .registered, detail: L("The camera follows the rider with a little spring, smoothing turns and accelerations. Off keeps it rigidly locked.")),
         "g_ShouldHideMouseAfterTimeout": .init(effect: .registered, detail: L("Hides the mouse pointer when it doesn't move.")),
         "g_HideMouseAfterMS": .init(effect: .registered, detail: L("How long the pointer stays visible after the last movement (game default 5 seconds).")),
+        "g_elevationProfile_DrawDistanceCM": .init(effect: .verified, detail: L("How much road ahead the small elevation profile in the HUD shows (game default 1 km). Checked in game: at 3 km the profile shows the climbs coming up well in advance.")),
+        "g_elevationProfile_Height": .init(effect: .verified, detail: L("Height of the small elevation profile in the HUD (game default 76). Checked in game: a taller profile is easier to read from the bike.")),
+        "g_FireworkNightShowAlwaysOn": .init(effect: .registered, detail: L("Fireworks in the sky every night, not only during special events. Night follows the world's clock, which comes from Zwift's servers and can't be changed: the fireworks only show when you ride while it's night in that world.")),
     ]
 }

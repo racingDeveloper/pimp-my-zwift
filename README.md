@@ -19,7 +19,7 @@ This project was developed with the help of AI (Anthropic's Claude), including t
 ## Features
 
 - **Presets**: Max, Balanced, Performance, or the game's own profiles, then fine-tune any setting.
-- **21 settings in 4 sections**: resolution and shadows, detail, effects, HUD and display. Every one of them is read by the game's code.
+- **24 settings in 4 sections**: resolution and shadows, detail, effects, HUD and display. Every one of them is read by the game's code.
 - **Render resolution beyond the menu**: up to 5120×2880, for supersampling on a 4K or Retina display.
 - **Allowed values only**: every control is limited to the values the game's code actually handles.
 - **The game's value next to each setting**: what the profile Zwift picked sets, or the default the game registers the variable with.
@@ -74,6 +74,17 @@ Findings from analysing Zwift 1.124.0 (build 167761) on macOS:
 
 - The tweakables that no Zwift profile sets (marked with an orange question mark) are read by the game's code, but their visual effect hasn't been seen in game yet.
 - `listvars` (the console command that would print every variable's value) is not available in the shipping build, so the final values can't be read back.
+
+### Other options that were tried
+
+Beyond graphics, the game reads 161 keys from prefs.xml (71 of them absent from a typical file) and registers 45 console commands. The candidates that don't touch physics, power or results were tried in game:
+
+- **Elevation profile** (`g_elevationProfile_DrawDistanceCM`, `g_elevationProfile_Height`): works, now in the app.
+- **Fireworks every night** (`g_FireworkNightShowAlwaysOn`): accepted, but night follows the server's world clock.
+- **Time of day** (`time 12:00am` in a profile): only lasts until the world clock syncs with the server, then jumps to the server's time. Not in the app.
+- **`MINIMAL_UI`** in prefs.xml: starts with the HUD hidden, the same as pressing H. Not in the app.
+- **`GAME_ACTIVELOADING`**: a cached feature flag the game reads from prefs.xml for the current session (the server resets it for the next launch). No measurable difference in loading. Not in the app.
+- **`VSYNC=0`** and **`MAINTAIN_FOCUS_FOR_BROADCAST`** in prefs.xml: read at startup, no visible or logged effect found.
 
 ### Tested in game
 
