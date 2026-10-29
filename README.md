@@ -19,11 +19,13 @@ This project was developed with the help of AI (Anthropic's Claude), including t
 ## Features
 
 - **Presets**: Max, Balanced, Performance, or the game's own profiles, then fine-tune any setting.
-- **24 settings in 4 sections**: resolution and shadows, detail, effects, HUD and display. Every one of them is read by the game's code.
+- **34 settings in 6 sections**: resolution and shadows, detail, effects, HUD and display, ride and audio, video routes. Every one of them is read by the game; none touches power, speed, drafting or results.
 - **Render resolution beyond the menu**: up to 5120×2880, for supersampling on a 4K or Retina display.
 - **Allowed values only**: every control is limited to the values the game's code actually handles.
 - **The game's value next to each setting**: what the profile Zwift picked sets, or the default the game registers the variable with.
 - **Explanations**: what each setting does, what it costs, and how certain it is to have an effect (used by Zwift's own profiles / read by the game's code but not seen in game yet / experimental).
+- **Last ride**: route, time riding and frame rate (median, min and max) from Zwift's log, to see what each setting costs.
+- **Video cache**: how much space the downloaded video routes take, and a button to empty it.
 - **Your Zwift**: version, GPU, the profile picked at the last launch, the commands it ran and any variable it didn't recognize, read from Zwift's log.
 - **Search**, a **preview** of exactly what will be written, automatic **backups** of the original profiles.
 - **Launch Zwift** with one click (⌘R), so the settings are always in place when the game starts.
@@ -74,6 +76,12 @@ Findings from analysing Zwift 1.124.0 (build 167761) on macOS:
 
 - The tweakables that no Zwift profile sets (marked with an orange question mark) are read by the game's code, but their visual effect hasn't been seen in game yet.
 - `listvars` (the console command that would print every variable's value) is not available in the shipping build, so the final values can't be read back.
+
+### Ride, audio and video routes
+
+- **Workout auto-pause**: the game pauses a workout when power stays below 20 W for 3 seconds (`g_minPowerPauseThreshold`, `g_workoutAutoPauseTime`).
+- **Preferences missing from prefs.xml**: the game reads 161 keys, and a typical file has only about 90. `ANNOUNCER_VOL` and `IGNOREGODMESSAGES` are among the absent ones; the app adds them when forced and removes them again when not.
+- **Video routes ("Mochi" internally)**: raw H.264 at 3840×2160 and about 120 fps (Constrained Baseline, no B-frames), downloaded in segments of about 30 seconds, roughly 70 Mbit/s, into `~/Library/Caches/Zwift/mochi`. A 3D layer (road splines, arches, occluders, shadows) is drawn over the footage. When the download falls behind, the game slows down or stops the rider.
 
 ### Other options that were tried
 

@@ -13,7 +13,7 @@ LITERAL = r'"((?:[^"\\]|\\.)*)"'
 OPENERS = [
     r'\bL\(',
     r'\b(?:Text|Button|Label|Toggle|Section|LabeledContent|Picker|DisclosureGroup)\(',
-    r'\.(?:help|navigationTitle|accessibilityLabel)\(',
+    r'\.(?:help|navigationTitle|accessibilityLabel|confirmationDialog)\(',
     r'\bprompt: ',
 ]
 

@@ -33,12 +33,22 @@ check("no backup → file", ProfileFile.original(current: ultra, backup: nil, la
 let again = ProfileFile.compose(ProfileFile.original(current: composed, backup: ultra, lastWritten: composed), lines: max.lines)
 check("idempotent", again == composed)
 // 5. The render resolution goes to prefs.xml, not to the profiles (the game applies prefs.xml after them)
-check("resolution kept out of profiles", max.resolution == "5120x2880" && !max.lines.contains { $0.hasPrefix("res ") })
-let prefs = "<ZWIFT>\n    <CONFIG>\n        <USER_RESOLUTION_PREF>5120x2880(2x)</USER_RESOLUTION_PREF>\n        <FULLSCREEN>1</FULLSCREEN>\n    </CONFIG>\n</ZWIFT>\n"
-check("prefs resolution read", PrefsFile.resolution(in: prefs) == "5120x2880(2x)")
-let newPrefs = PrefsFile.settingResolution(prefs, to: "4480x2520")
-check("prefs resolution replaced, rest kept", PrefsFile.resolution(in: newPrefs) == "4480x2520"
-      && newPrefs == prefs.replacingOccurrences(of: "5120x2880(2x)", with: "4480x2520"))
+check("resolution kept out of profiles", max.prefs["resolution"] == "5120x2880" && !max.lines.contains { $0.hasPrefix("res ") })
+let prefs = "<ZWIFT>\n    <CONFIG>\n        <MOCHI>\n            <RESOLUTION_PREF>2160p</RESOLUTION_PREF>\n        </MOCHI>\n        <USER_RESOLUTION_PREF>5120x2880(2x)</USER_RESOLUTION_PREF>\n        <INPUT_DEVICE_CUSTOM_CONFIG_MAPPING/>\n        <FULLSCREEN>1</FULLSCREEN>\n    </CONFIG>\n</ZWIFT>\n"
+let res = ["CONFIG", "USER_RESOLUTION_PREF"], mochi = ["CONFIG", "MOCHI", "RESOLUTION_PREF"], vol = ["CONFIG", "ANNOUNCER_VOL"]
+check("prefs value read", PrefsFile.value(in: prefs, at: res) == "5120x2880(2x)")
+check("nested prefs value read", PrefsFile.value(in: prefs, at: mochi) == "2160p")
+check("self-closing element reads as empty", PrefsFile.value(in: prefs, at: ["CONFIG", "INPUT_DEVICE_CUSTOM_CONFIG_MAPPING"]) == "")
+check("missing element reads as nil", PrefsFile.value(in: prefs, at: vol) == nil)
+let newPrefs = PrefsFile.setting(prefs, at: res, to: "4480x2520")
+check("prefs value replaced, rest kept", newPrefs == prefs.replacingOccurrences(of: "5120x2880(2x)", with: "4480x2520"))
+let added = PrefsFile.setting(prefs, at: vol, to: "0.5")
+check("missing element added at the end of its parent, indented",
+      added == prefs.replacingOccurrences(of: "        <FULLSCREEN>1</FULLSCREEN>\n", with: "        <FULLSCREEN>1</FULLSCREEN>\n        <ANNOUNCER_VOL>0.5</ANNOUNCER_VOL>\n"))
+check("added element removed again, file unchanged", PrefsFile.setting(added, at: vol, to: nil) == prefs)
+check("nested element replaced", PrefsFile.value(in: PrefsFile.setting(prefs, at: mochi, to: "1440p"), at: mochi) == "1440p")
+check("missing parent leaves the file unchanged", PrefsFile.setting(prefs, at: ["NOPE", "X"], to: "1") == prefs)
+check("original absent while ours is in place", ProfileFile.original(current: "0.5", backup: PrefsFile.absent, lastWritten: "0.5") == PrefsFile.absent)
 check("menu resolution recovered while ours is in place", ProfileFile.original(current: "5120x2880", backup: "3840x2160", lastWritten: "5120x2880") == "3840x2160")
 check("menu resolution changed in game wins", ProfileFile.original(current: "2560x1440", backup: "3840x2160", lastWritten: "5120x2880") == "2560x1440")
 check("resolution limited to what the game accepts", Catalog.validated(["resolution": "7680x4320"]).isEmpty && Catalog.validated(["resolution": "5120x2880"]).count == 1)
@@ -85,5 +95,28 @@ for p in Preset.builtIn { check("preset \(p.id) fully valid", Catalog.validated(
 for def in Catalog.all where def.command == .tweakable {
     check("\(def.key) default is a valid value", def.validated(Catalog.gameDefaults[def.key]) != nil)
 }
+
+// 10. Last ride report from the log
+let ride = RideReport(log: """
+[22:08:17] GAME_LoadLevel()  worldID = 0
+[22:08:27] FPS 55.76, 12481, 13518, -489
+[22:08:33] INFO LEVEL: [Route] RouteComputer route-set routeHash=3395698268 worldId=1 route=  Flat Route
+[22:08:33] GAME_LoadLevel()  worldID = 1
+[22:08:40] FPS 87.72, -372284, 48932, 19
+[22:08:48] FPS 77.12, 100025,  9533, -24
+[22:08:56] FPS 60.00, 99798,  9513, -246
+[22:09:04] FPS 70.00, 103499,  9462, -14
+[22:09:09] Changed resolution to 5120 x 2880
+[22:09:10] Changed shadow resolution to 4096 x 4096
+[22:09:45] INFO LEVEL: [GameState] ZSF_RIDE -> ZSF_DROPIN_SCREEN
+[22:09:57] FPS 62.11, -372284, 48932, 19
+""".split(separator: "\n").map(String.init))
+check("ride found", ride != nil)
+check("ride route", ride?.route == "Flat Route")
+check("ride samples skip loading and menus", ride?.fps == [77.12, 60.00, 70.00])
+check("ride fps stats", ride?.fpsMin == 60 && ride?.fpsMax == 77.12 && ride?.fpsMedian == 70)
+check("ride applied sizes", ride?.resolution == "5120x2880" && ride?.shadows == "4096")
+check("ride minutes", ride?.minutes == 0)
+check("no ride without a world", RideReport(log: ["[22:08:17] GAME_LoadLevel()  worldID = 0"]) == nil)
 
 exit(failures == 0 ? 0 : 1)

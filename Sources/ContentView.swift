@@ -124,6 +124,8 @@ struct OverviewPane: View {
                 LabeledContent("Forced values", value: L("\(String(state.values.count)) of \(String(Catalog.all.count))"))
             }
 
+            if let ride = state.snapshot.lastRide { LastRideSection(ride: ride) }
+
             LastLaunchSection(snapshot: state.snapshot)
 
             Section {
@@ -143,6 +145,31 @@ struct OverviewPane: View {
         if let forced = state.values["resolution"], let def = Catalog.byKey["resolution"] { return def.label(for: forced) }
         return state.snapshot.menuResolution.map { L("game menu: \($0)") } ?? L("game decides")
     }
+}
+
+private struct LastRideSection: View {
+    let ride: RideReport
+
+    var body: some View {
+        Section {
+            if let route = ride.route { LabeledContent("Route", value: route) }
+            if let minutes = ride.minutes { LabeledContent("Time riding", value: L("\(String(minutes)) min")) }
+            if let median = ride.fpsMedian, let low = ride.fpsMin, let high = ride.fpsMax {
+                LabeledContent("Frame rate", value: L("\(fps(median)) median · \(fps(low))–\(fps(high))"))
+            } else {
+                LabeledContent("Frame rate", value: L("no samples"))
+            }
+            if let resolution = ride.resolution { LabeledContent("Rendered at", value: resolution.replacingOccurrences(of: "x", with: "×")) }
+            if let shadows = ride.shadows { LabeledContent("Shadows", value: "\(shadows)×\(shadows)") }
+        } header: {
+            Text("Last ride")
+        } footer: {
+            Text("From Zwift's log, which records the frame rate about every 8 seconds (\(String(ride.fps.count)) samples). Compare rides on the same route to see what a setting costs.")
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func fps(_ value: Double) -> String { String(Int(value.rounded())) }
 }
 
 private struct LastLaunchSection: View {
@@ -229,6 +256,7 @@ struct SectionPane: View {
                     Text(note).font(.callout).foregroundStyle(.secondary)
                 }
             }
+            if section == .video { VideoCacheSection() }
             Section {
                 ForEach(Catalog.all.filter { $0.section == section }) { def in
                     SettingRow(def: def)
@@ -244,6 +272,35 @@ struct SectionPane: View {
         }
         .formStyle(.grouped)
         .navigationTitle(section.title)
+    }
+}
+
+private struct VideoCacheSection: View {
+    @EnvironmentObject private var state: AppState
+
+    var body: some View {
+        Section {
+            LabeledContent {
+                Button("Empty…") { state.confirmClearVideoCache = true }
+                    .disabled((state.videoCacheBytes ?? 0) == 0)
+            } label: {
+                Text("Video cache")
+                Text(sizeText).font(.caption).foregroundStyle(.secondary)
+            }
+            .confirmationDialog("Empty the video cache?", isPresented: $state.confirmClearVideoCache) {
+                Button("Empty", role: .destructive) { state.clearVideoCache() }
+            } message: {
+                Text("Zwift will download the video again the next time you ride a route.")
+            }
+        } footer: {
+            Text("~/Library/Caches/Zwift/mochi: downloaded video segments, previews and route data.")
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private var sizeText: String {
+        guard let bytes = state.videoCacheBytes else { return L("empty") }
+        return ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)
     }
 }
 

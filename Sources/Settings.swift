@@ -6,13 +6,14 @@ func L(_ value: String.LocalizationValue) -> String {
 }
 
 /// How a setting is written.
-enum ProfileCommand {
+enum ProfileCommand: Equatable {
     /// `set NAME=VALUE` in the graphics profiles: one of the game's tweakable variables.
     case tweakable
     /// `sres WxH` in the graphics profiles: shadow map resolution.
     case shadowResolution
-    /// USER_RESOLUTION_PREF in prefs.xml: the game runs `res <value>` after the profile, so a profile line would be overridden.
-    case renderResolution
+    /// An element of prefs.xml, by path below the root (e.g. ["CONFIG", "USER_RESOLUTION_PREF"]).
+    /// The render resolution goes there: the game runs `res <value>` with it after the profile, so a profile line would be overridden.
+    case prefs([String])
 }
 
 struct Option: Hashable {
@@ -65,9 +66,15 @@ struct SettingDef: Identifiable {
             return "set \(key)=\(value)"
         case .shadowResolution:
             return "sres \(value)x\(value)"
-        case .renderResolution:
+        case .prefs:
             return nil
         }
+    }
+
+    /// Where the setting lives in prefs.xml, for settings written there.
+    var prefsPath: [String]? {
+        if case .prefs(let path) = command { return path }
+        return nil
     }
 
     static func format(_ v: Double, decimals: Int) -> String {
@@ -76,7 +83,7 @@ struct SettingDef: Identifiable {
 }
 
 enum SettingSection: String, CaseIterable, Identifiable {
-    case resolution, detail, effects, display
+    case resolution, detail, effects, display, ride, video
     var id: String { rawValue }
 
     var title: String {
@@ -85,6 +92,8 @@ enum SettingSection: String, CaseIterable, Identifiable {
         case .detail: return L("Detail")
         case .effects: return L("Effects")
         case .display: return L("HUD & display")
+        case .ride: return L("Ride & audio")
+        case .video: return L("Video routes")
         }
     }
 
@@ -94,6 +103,8 @@ enum SettingSection: String, CaseIterable, Identifiable {
         case .detail: return "mountain.2"
         case .effects: return "sparkles"
         case .display: return "macwindow"
+        case .ride: return "figure.outdoor.cycle"
+        case .video: return "film"
         }
     }
 
@@ -103,6 +114,10 @@ enum SettingSection: String, CaseIterable, Identifiable {
             return L("Zwift picks a graphics profile (basic, medium, high or ultra) from its own list of GPUs, then applies the resolution chosen in its menu. The game accepts resolutions up to 5120×2880, beyond the menu's 4K: rendering more pixels than the display has and scaling them down gives a sharper image. MSAA isn't offered: on the Mac it was tested on (M2 Max) the game refused it, even at 2×.")
         case .detail:
             return L("Zwift's lower profiles halve the foliage and raise the level-of-detail bias; ultra leaves both at full detail, which is also the most the game allows.")
+        case .ride:
+            return L("Settings that don't change the image. None of them touches power, speed, drafting or results.")
+        case .video:
+            return L("Zwift's video routes stream real footage, recorded in 4K at about 120 frames per second and downloaded in segments of about 30 seconds (roughly 70 Mbit/s). If the download can't keep up, the game slows your rider down or stops it until the video is ready.")
         default:
             return nil
         }
@@ -129,7 +144,7 @@ enum Catalog {
                        Option(value: "1920x1080", label: "1920×1080"), Option(value: "2560x1440", label: "2560×1440"),
                        Option(value: "3840x2160", label: L("3840×2160 (menu maximum)")),
                        Option(value: "4480x2520", label: "4480×2520"), Option(value: "5120x2880", label: L("5120×2880 (game maximum)")),
-                   ]), command: .renderResolution),
+                   ]), command: .prefs(["CONFIG", "USER_RESOLUTION_PREF"])),
         tweak("gFXAA", "FXAA", .resolution),
         SettingDef(key: "sres", title: L("Shadow resolution"),
                    help: L("Written as \"sres SIZExSIZE\". Zwift's profiles use 512 (basic) to 2048 (ultra); the game accepts 256 to 4096."),
@@ -168,6 +183,35 @@ enum Catalog {
             Option(value: "300000", label: "3 km"), Option(value: "500000", label: "5 km"),
         ])),
         tweak("g_elevationProfile_Height", L("Elevation profile height"), .display, .slider(min: 60, max: 150, step: 1, decimals: 0, unit: "")),
+
+        // Ride & audio
+        tweak("g_minPowerPauseThreshold", L("Workout auto-pause below"), .ride,
+              .choice(["10", "20", "30", "40", "50"].map { Option(value: $0, label: "\($0) W") })),
+        tweak("g_workoutAutoPauseTime", L("Workout auto-pause after"), .ride,
+              .choice(["1", "2", "3", "5", "10"].map { Option(value: $0, label: L("\($0) s")) })),
+        SettingDef(key: "ANNOUNCER_VOL", title: L("Announcer volume"),
+                   help: L("ANNOUNCER_VOL in prefs.xml: the other volumes are in Zwift's menu, this one isn't."),
+                   section: .ride, control: .slider(min: 0, max: 1, step: 0.05, decimals: 2, unit: ""),
+                   command: .prefs(["CONFIG", "ANNOUNCER_VOL"])),
+        SettingDef(key: "IGNOREGODMESSAGES", title: L("Hide messages from Zwift HQ"),
+                   help: L("IGNOREGODMESSAGES in prefs.xml."),
+                   section: .ride, control: .choice(onOff), command: .prefs(["CONFIG", "IGNOREGODMESSAGES"])),
+        tweak("g_enableEventHaptics", L("Event vibrations"), .ride),
+        tweak("g_cameraLookBackTime", L("Look-back camera duration"), .ride,
+              .choice(["2", "3", "5", "8", "10"].map { Option(value: $0, label: L("\($0) s")) })),
+        tweak("g_BikeSoundDistCutoffCentemeters", L("Hear other bikes within"), .ride,
+              .choice([("2500", "25 m"), ("5000", "50 m"), ("10000", "100 m"), ("20000", "200 m"), ("50000", "500 m")].map { Option(value: $0.0, label: $0.1) })),
+        tweak("g_phoneRiderListUpdateTime", L("Companion rider list refresh"), .ride,
+              .choice(["2000", "5000", "10000"].map { Option(value: $0, label: L("\(String(Int($0)! / 1000)) s")) })),
+
+        // Video routes
+        SettingDef(key: "MOCHI_RESOLUTION", title: L("Video resolution"),
+                   help: L("MOCHI\\RESOLUTION_PREF in prefs.xml, also in Zwift's menu."),
+                   section: .video, control: .choice(["1080p", "1440p", "2160p"].map { Option(value: $0, label: $0) }),
+                   command: .prefs(["CONFIG", "MOCHI", "RESOLUTION_PREF"])),
+        SettingDef(key: "MOCHI_DOWNLOAD_FULL", title: L("Download the whole route before starting"),
+                   help: L("MOCHI\\DOWNLOAD_FULL in prefs.xml."),
+                   section: .video, control: .choice(onOff), command: .prefs(["CONFIG", "MOCHI", "DOWNLOAD_FULL"])),
         tweak("gUseSpringyCamera", L("Springy camera"), .display),
         tweak("g_ShouldHideMouseAfterTimeout", L("Hide the mouse pointer"), .display),
         tweak("g_HideMouseAfterMS", L("Hide the pointer after"), .display,

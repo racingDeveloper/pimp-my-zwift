@@ -13,6 +13,8 @@ enum GamePaths {
     static let documentsDir = home.appendingPathComponent("Documents/Zwift", isDirectory: true)
     static let prefs = documentsDir.appendingPathComponent("prefs.xml")
     static let gameLog = documentsDir.appendingPathComponent("Logs/Log.txt")
+    /// Downloaded video routes (Mochi): raw video segments, previews and route data, one file per hash.
+    static let videoCache = home.appendingPathComponent("Library/Caches/Zwift/mochi", isDirectory: true)
     static let log = home.appendingPathComponent("Library/Logs/PimpMyZwift.log")
 
     static func profile(_ name: String) -> URL {
@@ -73,30 +75,82 @@ enum ProfileFile {
     }
 }
 
-/// Zwift's prefs.xml: only USER_RESOLUTION_PREF is touched, the rest of the file is left as it is.
-/// After the profile, the game runs `res <value>` with it, so it's where the render resolution has to go.
+/// Zwift's prefs.xml: only the elements the app manages are touched, the rest of the file is left as it is.
+/// Paths start below the root element, e.g. ["CONFIG", "MOCHI", "RESOLUTION_PREF"].
 enum PrefsFile {
-    static func resolution(in text: String) -> String? {
-        text.firstMatch(of: #/<USER_RESOLUTION_PREF>([^<]*)</USER_RESOLUTION_PREF>/#).map { String($0.1) }
+    /// Stands for "the element doesn't exist" where a string is needed (original values, last written values).
+    static let absent = "\u{1}absent"
+
+    /// Text of the element at `path`, nil when it's missing.
+    static func value(in text: String, at path: [String]) -> String? {
+        guard let parent = parentRange(in: text, for: path), let element = elementRange(in: text, within: parent, name: path.last!) else { return nil }
+        let raw = text[element]
+        guard let open = raw.firstIndex(of: ">"), !raw[..<open].hasSuffix("/") else { return "" }
+        let afterOpen = raw.index(after: open)
+        guard let close = raw.range(of: "</", range: afterOpen..<raw.endIndex) else { return "" }
+        return String(raw[afterOpen..<close.lowerBound])
     }
 
-    static func settingResolution(_ text: String, to value: String) -> String {
-        text.replacing(#/<USER_RESOLUTION_PREF>[^<]*</USER_RESOLUTION_PREF>/#, with: "<USER_RESOLUTION_PREF>\(value)</USER_RESOLUTION_PREF>")
+    /// Sets the element at `path`, adding it at the end of its parent when missing; nil removes it.
+    /// A missing parent leaves the file unchanged.
+    static func setting(_ text: String, at path: [String], to value: String?) -> String {
+        guard let parent = parentRange(in: text, for: path) else { return text }
+        let name = path.last!
+        var out = text
+        if let element = elementRange(in: text, within: parent, name: name) {
+            if let value {
+                out.replaceSubrange(element, with: "<\(name)>\(value)</\(name)>")
+            } else {
+                // Remove the whole line, indentation and newline included.
+                let lineStart = text[..<element.lowerBound].lastIndex(of: "\n").map { text.index(after: $0) } ?? element.lowerBound
+                let onlySpaces = text[lineStart..<element.lowerBound].allSatisfy { $0 == " " || $0 == "\t" }
+                var end = element.upperBound
+                if onlySpaces, end < text.endIndex, text[end] == "\n" { end = text.index(after: end) }
+                out.removeSubrange((onlySpaces ? lineStart : element.lowerBound)..<end)
+            }
+        } else if let value {
+            // Insert before the parent's closing tag, one indentation level deeper than it.
+            let closing = parent.upperBound
+            let lineStart = text[..<closing].lastIndex(of: "\n").map { text.index(after: $0) } ?? closing
+            let indent = String(text[lineStart..<closing].prefix { $0 == " " || $0 == "\t" })
+            let line = indent + "    <\(name)>\(value)</\(name)>\n"
+            out.insert(contentsOf: lineStart == closing ? "\n" + line + indent : line, at: lineStart == closing ? closing : lineStart)
+        }
+        return out
+    }
+
+    /// Range of the parent element's content (between its tags), for the path's last component.
+    private static func parentRange(in text: String, for path: [String]) -> Range<String.Index>? {
+        var range = text.startIndex..<text.endIndex
+        for name in path.dropLast() {
+            guard let open = text.range(of: "<\(name)>", range: range),
+                  let close = text.range(of: "</\(name)>", range: open.upperBound..<range.upperBound) else { return nil }
+            range = open.upperBound..<close.lowerBound
+        }
+        return range
+    }
+
+    /// Range of a whole `<NAME>…</NAME>` or `<NAME/>` element inside `range`.
+    private static func elementRange(in text: String, within range: Range<String.Index>, name: String) -> Range<String.Index>? {
+        if let selfClosing = text.range(of: "<\(name)/>", range: range) { return selfClosing }
+        guard let open = text.range(of: "<\(name)>", range: range),
+              let close = text.range(of: "</\(name)>", range: open.upperBound..<range.upperBound) else { return nil }
+        return open.lowerBound..<close.upperBound
     }
 }
 
 struct ConfigPlan {
     var lines: [String] = []
-    /// USER_RESOLUTION_PREF to write in prefs.xml; nil puts back the menu's choice.
-    var resolution: String?
+    /// prefs.xml values forced by the app, keyed by setting; the settings left out get their original value back.
+    var prefs: [String: String] = [:]
 
     init(values: [String: String]) {
         // Commands first, then tweakables, in catalog order: stable output, easy to compare.
         let ordered = Catalog.all.filter { $0.command != .tweakable } + Catalog.all.filter { $0.command == .tweakable }
         for def in ordered {
             guard let value = values[def.key] else { continue }
-            if def.command == .renderResolution {
-                resolution = value
+            if def.prefsPath != nil {
+                prefs[def.key] = value
             } else if let line = def.line(for: value) {
                 lines.append(line)
             }
@@ -104,12 +158,15 @@ struct ConfigPlan {
     }
 
     var preview: String {
-        guard !lines.isEmpty || resolution != nil else {
-            return L("No changes: Zwift's profiles and the menu's resolution are restored, and the game decides.")
+        guard !lines.isEmpty || !prefs.isEmpty else {
+            return L("No changes: Zwift's profiles and preferences are restored, and the game decides.")
         }
         var parts: [String] = []
-        if let resolution {
-            parts.append("# prefs.xml\nUSER_RESOLUTION_PREF = \(resolution)")
+        let prefsLines = Catalog.all.compactMap { def in
+            def.prefsPath.flatMap { path in prefs[def.key].map { "\(path.joined(separator: "\\")) = \($0)" } }
+        }
+        if !prefsLines.isEmpty {
+            parts.append("# prefs.xml\n" + prefsLines.joined(separator: "\n"))
         }
         if !lines.isEmpty {
             let files = ProfileFile.names.map { "\($0).txt" }.joined(separator: ", ")
@@ -125,8 +182,12 @@ struct GameSnapshot {
     /// Profile Zwift picked at its last launch ("ultra", …), from Log.txt.
     var profileName: String?
     var gpu: String?
-    /// Resolution chosen in the game's menu, from prefs.xml (e.g. "3840x2160"), without this app's value.
-    var menuResolution: String?
+    /// prefs.xml values as the game left them (without this app's values), keyed by setting; missing elements are left out.
+    var prefsValues: [String: String] = [:]
+    /// Resolution chosen in the game's menu (e.g. "3840x2160").
+    var menuResolution: String? { prefsValues["resolution"] }
+    /// The last ride in Zwift's log: route, length, frame rate.
+    var lastRide: RideReport?
     /// Values the chosen profile sets on its own, before this app's lines.
     var profileValues: [String: String] = [:]
     /// Console commands Zwift ran from the profile at its last launch.
@@ -139,7 +200,9 @@ struct GameSnapshot {
         if let log = try? String(contentsOf: GamePaths.gameLog, encoding: .utf8) {
             snapshot.read(log: log)
         }
-        snapshot.menuResolution = ConfigWriter.menuResolution()
+        for def in Catalog.all {
+            if let path = def.prefsPath, let value = ConfigWriter.originalPrefsValue(at: path) { snapshot.prefsValues[def.key] = value }
+        }
         if let pointer = try? String(contentsOf: GamePaths.installDir.appendingPathComponent("Zwift_ver_cur_filename.txt"), encoding: .utf8),
            let verCur = try? String(contentsOf: GamePaths.installDir.appendingPathComponent(pointer.trimmingCharacters(in: .whitespacesAndNewlines)), encoding: .utf8) {
             snapshot.version = verCur.firstMatch(of: #/sversion="([^"]+)"/#).map { String($0.1) }
@@ -185,12 +248,16 @@ struct GameSnapshot {
             }
         }
         flushSyntaxError()
+        lastRide = RideReport(log: lines[start...])
     }
 
     /// Describes the value the game uses when the app doesn't force `def`.
     func describe(_ def: SettingDef) -> String {
-        if def.command == .renderResolution {
+        if def.key == "resolution" {
             return menuResolution.map { L("game menu: \(def.label(for: $0))") } ?? L("game menu: not saved yet")
+        }
+        if def.prefsPath != nil, let value = prefsValues[def.key] {
+            return L("game: \(def.label(for: value))")
         }
         if let value = profileValues[def.key] {
             return L("profile \(profileName ?? "ultra"): \(def.label(for: value))")
@@ -199,6 +266,57 @@ struct GameSnapshot {
             return L("game default: \(def.label(for: value))")
         }
         return L("decided by the game")
+    }
+}
+
+/// The last ride in Zwift's log. The game logs its frame rate about every 8 seconds.
+struct RideReport {
+    var route: String?
+    var minutes: Int?
+    /// Frame rate samples while riding (the first one after a world loads is skipped: it covers the loading).
+    var fps: [Double] = []
+    /// What the game actually applied, from its own messages.
+    var resolution: String?
+    var shadows: String?
+
+    var fpsMin: Double? { fps.min() }
+    var fpsMax: Double? { fps.max() }
+    var fpsMedian: Double? {
+        guard !fps.isEmpty else { return nil }
+        let sorted = fps.sorted()
+        return sorted.count % 2 == 1 ? sorted[sorted.count / 2] : (sorted[sorted.count / 2 - 1] + sorted[sorted.count / 2]) / 2
+    }
+
+    init?<Lines: Sequence>(log lines: Lines) where Lines.Element == String {
+        var riding = false, skipNext = false
+        var rideStart: Int?, rideEnd: Int?
+        func seconds(_ line: String) -> Int? {
+            line.firstMatch(of: #/^\[(\d+):(\d+):(\d+)\]/#).map { Int($0.1)! * 3600 + Int($0.2)! * 60 + Int($0.3)! }
+        }
+        for line in lines {
+            if let world = line.firstMatch(of: #/GAME_LoadLevel\(\)\s+worldID = (\d+)/#) {
+                riding = Int(world.1)! > 0
+                skipNext = true
+                if riding, rideStart == nil { rideStart = seconds(line) }
+            } else if line.contains("-> ZSF_DROPIN_SCREEN") {
+                riding = false
+            } else if let name = line.firstMatch(of: #/route=\s*(.+)$/#) {
+                route = name.1.trimmingCharacters(in: .whitespaces)
+            } else if let sample = line.firstMatch(of: #/\] FPS ([0-9.]+),/#), riding {
+                if skipNext { skipNext = false; continue }
+                fps.append(Double(sample.1)!)
+                rideEnd = seconds(line)
+            } else if let size = line.firstMatch(of: #/Changed resolution to (\d+) x (\d+)/#) {
+                resolution = "\(size.1)x\(size.2)"
+            } else if let size = line.firstMatch(of: #/Changed shadow resolution to (\d+) x/#) {
+                shadows = String(size.1)
+            }
+        }
+        guard rideStart != nil else { return nil }
+        if let rideStart, let rideEnd {
+            // Rides past midnight wrap the clock.
+            minutes = ((rideEnd - rideStart + 86_400) % 86_400) / 60
+        }
     }
 }
 
@@ -218,7 +336,8 @@ enum ConfigError: LocalizedError {
 
 enum ConfigWriter {
     private static func lastWrittenKey(_ name: String) -> String { "lastWritten.\(name)" }
-    private static let originalResolutionKey = "originalResolution"
+    /// prefs.xml values before the app changed them, and the ones it wrote last, keyed by path ("CONFIG\\VSYNC").
+    private static let originalPrefsKey = "originalPrefs", lastWrittenPrefsKey = "lastWrittenPrefs"
 
     static func checkAccess() -> ConfigError? {
         let fm = FileManager.default
@@ -260,48 +379,108 @@ enum ConfigWriter {
                 throw ConfigError.io(L("Couldn't write \(name).txt: \(error.localizedDescription)"))
             }
         }
-        try applyResolution(plan.resolution)
-        Log.write("Applied \(plan.lines.count) lines to \(ProfileFile.names.count) profiles, resolution \(plan.resolution ?? "from the menu")")
+        try applyPrefs(plan.prefs)
+        Log.write("Applied \(plan.lines.count) lines to \(ProfileFile.names.count) profiles and \(plan.prefs.count) preferences")
     }
 
-    /// The resolution chosen in Zwift's menu: the value saved before this app changed it, unless the game has saved a new one since.
-    static func menuResolution() -> String? {
-        guard let text = try? String(contentsOf: GamePaths.prefs, encoding: .utf8),
-              let current = PrefsFile.resolution(in: text) else { return nil }
-        return ProfileFile.original(current: current,
-                                    backup: UserDefaults.standard.string(forKey: originalResolutionKey),
-                                    lastWritten: UserDefaults.standard.string(forKey: lastWrittenKey("resolution")))
+    private static var originalPrefs: [String: String] {
+        get { UserDefaults.standard.dictionary(forKey: originalPrefsKey) as? [String: String] ?? [:] }
+        set { UserDefaults.standard.set(newValue, forKey: originalPrefsKey) }
     }
 
-    private static func applyResolution(_ value: String?) throws {
-        guard let text = try? String(contentsOf: GamePaths.prefs, encoding: .utf8),
-              let current = PrefsFile.resolution(in: text), let original = menuResolution() else {
-            if value != nil { throw ConfigError.io(L("Zwift's prefs.xml has no resolution yet: pick one in Zwift's menu once.")) }
+    private static var lastWrittenPrefs: [String: String] {
+        get { UserDefaults.standard.dictionary(forKey: lastWrittenPrefsKey) as? [String: String] ?? [:] }
+        set { UserDefaults.standard.set(newValue, forKey: lastWrittenPrefsKey) }
+    }
+
+    /// Version 0.1 only managed the resolution, with its own keys.
+    private static func migrateResolutionKeys() {
+        let defaults = UserDefaults.standard
+        guard let original = defaults.string(forKey: "originalResolution") else { return }
+        let id = "CONFIG\\USER_RESOLUTION_PREF"
+        originalPrefs[id] = original
+        if let last = defaults.string(forKey: "lastWritten.resolution") { lastWrittenPrefs[id] = last }
+        defaults.removeObject(forKey: "originalResolution")
+        defaults.removeObject(forKey: "lastWritten.resolution")
+    }
+
+    /// The value the game itself saved at `path` (nil when it saved none): the one from before this app changed it,
+    /// unless the game has saved a new one since (for example a resolution picked in its menu).
+    static func originalPrefsValue(at path: [String], in text: String? = nil) -> String? {
+        migrateResolutionKeys()
+        guard let text = text ?? (try? String(contentsOf: GamePaths.prefs, encoding: .utf8)) else { return nil }
+        let id = path.joined(separator: "\\")
+        let current = PrefsFile.value(in: text, at: path) ?? PrefsFile.absent
+        let original = ProfileFile.original(current: current, backup: originalPrefs[id], lastWritten: lastWrittenPrefs[id])
+        return original == PrefsFile.absent ? nil : original
+    }
+
+    private static func applyPrefs(_ forced: [String: String]) throws {
+        migrateResolutionKeys()
+        let managed = Catalog.all.compactMap { def in def.prefsPath.map { (def.key, $0) } }
+        guard let text = try? String(contentsOf: GamePaths.prefs, encoding: .utf8) else {
+            if !forced.isEmpty { throw ConfigError.io(L("Zwift's prefs.xml wasn't found: launch Zwift at least once.")) }
             return
         }
-        let target = value ?? original
-        if target != current {
+        var updated = text
+        var originals = originalPrefs, lastWritten = lastWrittenPrefs
+        for (key, path) in managed {
+            let id = path.joined(separator: "\\")
+            let original = originalPrefsValue(at: path, in: text)
+            if let value = forced[key] {
+                updated = PrefsFile.setting(updated, at: path, to: value)
+                originals[id] = original ?? PrefsFile.absent
+                lastWritten[id] = PrefsFile.value(in: updated, at: path) ?? PrefsFile.absent
+            } else {
+                // Only touch the element when it differs, so the game's own formatting (e.g. `<KEY/>`) is kept.
+                if PrefsFile.value(in: updated, at: path) != original {
+                    updated = PrefsFile.setting(updated, at: path, to: original)
+                }
+                originals[id] = nil
+                lastWritten[id] = nil
+            }
+        }
+        if updated != text {
             let backup = GamePaths.prefs.appendingPathExtension("pimpmyzwift.bak")
             do {
                 if !FileManager.default.fileExists(atPath: backup.path) {
                     try FileManager.default.copyItem(at: GamePaths.prefs, to: backup)
                 }
-                try write(PrefsFile.settingResolution(text, to: target), to: GamePaths.prefs)
+                try write(updated, to: GamePaths.prefs)
             } catch {
                 throw ConfigError.io(L("Couldn't write prefs.xml: \(error.localizedDescription)"))
             }
         }
-        if value == nil {
-            UserDefaults.standard.removeObject(forKey: originalResolutionKey)
-            UserDefaults.standard.removeObject(forKey: lastWrittenKey("resolution"))
-        } else {
-            UserDefaults.standard.set(original, forKey: originalResolutionKey)
-            UserDefaults.standard.set(target, forKey: lastWrittenKey("resolution"))
-        }
+        originalPrefs = originals
+        lastWrittenPrefs = lastWritten
     }
 
     private static func write(_ text: String, to url: URL) throws {
         try text.write(to: url, atomically: true, encoding: .utf8)
+    }
+}
+
+/// The video routes' download cache. Zwift downloads what's missing again the next time a route is ridden.
+enum VideoCache {
+    /// Bytes on disk, nil when the folder doesn't exist.
+    static func size() -> Int64? {
+        let fm = FileManager.default
+        guard fm.fileExists(atPath: GamePaths.videoCache.path),
+              let files = fm.enumerator(at: GamePaths.videoCache, includingPropertiesForKeys: [.totalFileAllocatedSizeKey]) else { return nil }
+        var total: Int64 = 0
+        for case let url as URL in files {
+            total += Int64((try? url.resourceValues(forKeys: [.totalFileAllocatedSizeKey]).totalFileAllocatedSize) ?? 0)
+        }
+        return total
+    }
+
+    /// Deletes the cache's contents, leaving the folder in place.
+    static func clear() throws {
+        let fm = FileManager.default
+        for item in (try? fm.contentsOfDirectory(at: GamePaths.videoCache, includingPropertiesForKeys: nil)) ?? [] {
+            try fm.removeItem(at: item)
+        }
+        Log.write("Cleared the video cache")
     }
 }
 

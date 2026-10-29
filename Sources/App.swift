@@ -37,6 +37,8 @@ final class AppState: ObservableObject {
     @Published var gameRunning = GameLauncher.isRunning
     @Published var busy = false
     @Published var snapshot = GameSnapshot()
+    @Published var videoCacheBytes: Int64?
+    @Published var confirmClearVideoCache = false
     // Navigation state lives here rather than in @State: with only the Command Line Tools the SwiftUIMacros plugin is missing.
     // `-InitialPane <section>` on the command line opens a section directly (used to take the README screenshots).
     @Published var pane: Pane? = UserDefaults.standard.string(forKey: "InitialPane")
@@ -87,6 +89,7 @@ final class AppState: ObservableObject {
         accessProblem = ConfigWriter.checkAccess()
         gameRunning = GameLauncher.isRunning
         snapshot = GameSnapshot.load()
+        videoCacheBytes = VideoCache.size()
     }
 
     func gameValue(for def: SettingDef) -> String {
@@ -120,6 +123,21 @@ final class AppState: ObservableObject {
                 : L("Settings written to Zwift's graphics profiles."), isError: false)
         } catch {
             notice = Notice(text: error.localizedDescription, isError: true)
+        }
+        refresh()
+    }
+
+    func clearVideoCache() {
+        refresh()
+        guard !gameRunning else {
+            notice = Notice(text: L("Zwift is open: quit it before emptying the video cache."), isError: true)
+            return
+        }
+        do {
+            try VideoCache.clear()
+            notice = Notice(text: L("Video cache emptied. Zwift downloads the video again the next time you ride a route."), isError: false)
+        } catch {
+            notice = Notice(text: L("Couldn't empty the video cache: \(error.localizedDescription)"), isError: true)
         }
         refresh()
     }

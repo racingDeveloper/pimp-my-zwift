@@ -150,9 +150,7 @@
 "Zwift picks a graphics profile (basic, medium, high or ultra) from its own list of GPUs, then applies the resolution chosen in its menu. The game accepts resolutions up to 5120×2880, beyond the menu's 4K: rendering more pixels than the display has and scaling them down gives a sharper image. MSAA isn't offered: on the Mac it was tested on (M2 Max) the game refused it, even at 2×." = "Zwift sceglie un profilo grafico (basic, medium, high o ultra) dalla sua lista di GPU, poi applica la risoluzione scelta nel suo menu. Il gioco accetta risoluzioni fino a 5120×2880, oltre il 4K del menu: renderizzare più pixel di quelli dello schermo e ridurli dà un'immagine più nitida. L'MSAA non è offerto: sul Mac usato per le prove (M2 Max) il gioco l'ha rifiutato, anche a 2×.";
 "How many pixels the game renders. Zwift's menu stops at 3840×2160, but the game accepts up to 5120×2880 (checked: the log reports \"Changed resolution to 5120 x 2880\"). Rendering above the display's resolution and scaling down is supersampling: cleaner edges and finer detail, the biggest sharpness gain available. The GPU cost grows with the pixels: 5120×2880 is 1.8× the pixels of 4K. Pick a size with your display's aspect ratio. The game keeps the value in prefs.xml; choosing a resolution in Zwift's menu replaces it until the next launch from here." = "Quanti pixel renderizza il gioco. Il menu di Zwift si ferma a 3840×2160, ma il gioco accetta fino a 5120×2880 (verificato: il log riporta \"Changed resolution to 5120 x 2880\"). Renderizzare sopra la risoluzione dello schermo e ridurre è supersampling: bordi più puliti e dettagli più fini, il guadagno di nitidezza più grande disponibile. Il costo per la GPU cresce con i pixel: 5120×2880 sono 1,8 volte i pixel del 4K. Scegli una dimensione con le proporzioni del tuo schermo. Il gioco conserva il valore in prefs.xml; scegliere una risoluzione nel menu di Zwift lo sostituisce fino al prossimo avvio da qui.";
 "Everything Zwift can do on a powerful Mac: rendering at 5120×2880, 4096 shadows, bike shadows further away, reflections and sun rays at full detail." = "Tutto quello che Zwift sa fare su un Mac potente: rendering a 5120×2880, ombre a 4096, ombre delle bici più lontano, riflessi e raggi del sole, dettaglio pieno.";
-"No changes: Zwift's profiles and the menu's resolution are restored, and the game decides." = "Nessuna modifica: i profili di Zwift e la risoluzione del menu vengono ripristinati, e decide il gioco.";
 "Couldn't write prefs.xml: %@" = "Impossibile scrivere prefs.xml: %@";
-"Zwift's prefs.xml has no resolution yet: pick one in Zwift's menu once." = "prefs.xml di Zwift non ha ancora una risoluzione: scegline una nel menu di Zwift almeno una volta.";
 "Zwift rejected: %@" = "Zwift ha rifiutato: %@";
 "a line with a syntax error" = "una riga con un errore di sintassi";
 
@@ -164,3 +162,62 @@
 "How much road ahead the small elevation profile in the HUD shows (game default 1 km). Checked in game: at 3 km the profile shows the climbs coming up well in advance." = "Quanta strada mostra in avanti il piccolo profilo altimetrico nell'HUD (default del gioco 1 km). Controllato in gioco: a 3 km il profilo mostra le salite in arrivo con largo anticipo.";
 "Height of the small elevation profile in the HUD (game default 76). Checked in game: a taller profile is easier to read from the bike." = "Altezza del piccolo profilo altimetrico nell'HUD (default del gioco 76). Controllato in gioco: un profilo più alto si legge meglio dalla bici.";
 "Fireworks in the sky every night, not only during special events. Night follows the world's clock, which comes from Zwift's servers and can't be changed: the fireworks only show when you ride while it's night in that world." = "Fuochi d'artificio in cielo ogni notte, non solo durante gli eventi speciali. La notte segue l'orologio del mondo, che arriva dai server di Zwift e non si può cambiare: i fuochi si vedono solo se pedali mentre in quel mondo è notte.";
+
+/* Ride & audio */
+"Ride & audio" = "Corsa e audio";
+"Settings that don't change the image. None of them touches power, speed, drafting or results." = "Impostazioni che non cambiano l'immagine. Nessuna tocca potenza, velocità, scia o risultati.";
+"Workout auto-pause below" = "Pausa automatica allenamento sotto";
+"Workout auto-pause after" = "Pausa automatica allenamento dopo";
+"Announcer volume" = "Volume dell'annunciatore";
+"Hide messages from Zwift HQ" = "Nascondi i messaggi di Zwift HQ";
+"Event vibrations" = "Vibrazioni degli eventi";
+"Look-back camera duration" = "Durata dello sguardo all'indietro";
+"Hear other bikes within" = "Senti le altre bici entro";
+"Companion rider list refresh" = "Aggiornamento lista ciclisti Companion";
+"ANNOUNCER_VOL in prefs.xml: the other volumes are in Zwift's menu, this one isn't." = "ANNOUNCER_VOL in prefs.xml: gli altri volumi sono nel menu di Zwift, questo no.";
+"IGNOREGODMESSAGES in prefs.xml." = "IGNOREGODMESSAGES in prefs.xml.";
+"During a workout, the game pauses it when your power stays below this value (game default 20 W). Raise it if the workout keeps running while you're soft-pedalling to grab a bottle." = "Durante un allenamento, il gioco lo mette in pausa quando la potenza resta sotto questo valore (default del gioco 20 W). Alzalo se l'allenamento continua mentre pedali piano per prendere la borraccia.";
+"How long the power has to stay below the threshold before the workout pauses (game default 3 seconds)." = "Per quanto la potenza deve restare sotto la soglia prima che l'allenamento vada in pausa (default del gioco 3 secondi).";
+"Volume of the announcer's voice in events and races (game default 1, full volume). Zwift's menu has sliders for the other sounds, not for this one." = "Volume della voce dell'annunciatore in eventi e gare (default del gioco 1, volume pieno). Il menu di Zwift ha i cursori per gli altri suoni, non per questo.";
+"Hides the broadcast messages Zwift sends to everyone riding (the ones from Zwift HQ)." = "Nasconde i messaggi che Zwift invia a tutti quelli che pedalano (quelli di Zwift HQ).";
+"Vibrations on Zwift Play and Zwift Ride for game events (power-ups, segments, …). Off keeps the other vibrations, which follow the setting in Zwift's menu." = "Vibrazioni di Zwift Play e Zwift Ride per gli eventi di gioco (power-up, segmenti, …). Spento mantiene le altre vibrazioni, che seguono l'impostazione nel menu di Zwift.";
+"How long the camera keeps looking behind before returning to the normal view (game default 5 seconds)." = "Per quanto la telecamera resta girata all'indietro prima di tornare alla vista normale (default del gioco 5 secondi).";
+"Beyond this distance the other riders' bikes make no sound (game default 100 m). Lower for a quieter ride in big groups." = "Oltre questa distanza le bici degli altri ciclisti non fanno rumore (default del gioco 100 m). Abbassala per una corsa più silenziosa nei gruppi numerosi.";
+"How often the list of nearby riders in the Zwift Companion app is refreshed (game default 5 seconds)." = "Ogni quanto si aggiorna la lista dei ciclisti vicini nell'app Zwift Companion (default del gioco 5 secondi).";
+
+/* Video routes */
+"Video routes" = "Percorsi video";
+"Zwift's video routes stream real footage, recorded in 4K at about 120 frames per second and downloaded in segments of about 30 seconds (roughly 70 Mbit/s). If the download can't keep up, the game slows your rider down or stops it until the video is ready." = "I percorsi video di Zwift mostrano riprese reali, registrate in 4K a circa 120 fotogrammi al secondo e scaricate in segmenti di circa 30 secondi (circa 70 Mbit/s). Se il download non tiene il passo, il gioco rallenta o ferma il tuo ciclista finché il video non è pronto.";
+"Video resolution" = "Risoluzione del video";
+"Download the whole route before starting" = "Scarica tutto il percorso prima di partire";
+"MOCHI\\RESOLUTION_PREF in prefs.xml, also in Zwift's menu." = "MOCHI\\RESOLUTION_PREF in prefs.xml, anche nel menu di Zwift.";
+"MOCHI\\DOWNLOAD_FULL in prefs.xml." = "MOCHI\\DOWNLOAD_FULL in prefs.xml.";
+"Resolution of the video routes. Checked on the cached files: 2160p is 3840×2160 at about 120 frames per second, roughly 70 Mbit/s. A lower resolution downloads much less, which helps if the video makes your rider slow down while it buffers." = "Risoluzione dei percorsi video. Verificato sui file in cache: 2160p è 3840×2160 a circa 120 fotogrammi al secondo, circa 70 Mbit/s. Una risoluzione più bassa scarica molto meno, il che aiuta se il video fa rallentare il ciclista mentre si carica.";
+"Downloads the whole route before the ride starts, instead of while riding: a longer wait at the start, but no slow-downs for buffering. Zwift's menu only offers it in some cases." = "Scarica tutto il percorso prima della partenza invece che durante la corsa: un'attesa più lunga all'inizio, ma nessun rallentamento per il caricamento. Il menu di Zwift lo offre solo in alcuni casi.";
+"Video cache" = "Cache video";
+"Empty…" = "Svuota…";
+"Empty" = "Svuota";
+"empty" = "vuota";
+"Empty the video cache?" = "Svuotare la cache video?";
+"Zwift will download the video again the next time you ride a route." = "Zwift scaricherà di nuovo il video la prossima volta che farai un percorso.";
+"~/Library/Caches/Zwift/mochi: downloaded video segments, previews and route data." = "~/Library/Caches/Zwift/mochi: segmenti video scaricati, anteprime e dati dei percorsi.";
+"Video cache emptied. Zwift downloads the video again the next time you ride a route." = "Cache video svuotata. Zwift scarica di nuovo il video la prossima volta che fai un percorso.";
+"Zwift is open: quit it before emptying the video cache." = "Zwift è aperto: chiudilo prima di svuotare la cache video.";
+"Couldn't empty the video cache: %@" = "Impossibile svuotare la cache video: %@";
+
+/* Last ride */
+"Last ride" = "Ultima corsa";
+"Route" = "Percorso";
+"Time riding" = "Tempo in sella";
+"%@ min" = "%@ min";
+"Frame rate" = "Frame rate";
+"%@ median · %@–%@" = "%@ mediana · %@–%@";
+"no samples" = "nessun campione";
+"Rendered at" = "Renderizzato a";
+"Shadows" = "Ombre";
+"From Zwift's log, which records the frame rate about every 8 seconds (%@ samples). Compare rides on the same route to see what a setting costs." = "Dal log di Zwift, che registra il frame rate circa ogni 8 secondi (%@ campioni). Confronta corse sullo stesso percorso per vedere quanto costa un'impostazione.";
+
+/* Preferences */
+"game: %@" = "gioco: %@";
+"No changes: Zwift's profiles and preferences are restored, and the game decides." = "Nessuna modifica: i profili e le preferenze di Zwift vengono ripristinati, e decide il gioco.";
+"Zwift's prefs.xml wasn't found: launch Zwift at least once." = "prefs.xml di Zwift non è stato trovato: avvia Zwift almeno una volta.";
