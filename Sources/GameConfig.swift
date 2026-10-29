@@ -57,7 +57,7 @@ enum ProfileFile {
         return current
     }
 
-    /// Values a profile sets, keyed like the catalog (`sres`, `msaa` and tweakable names).
+    /// Values a profile sets, keyed like the catalog (`sres` and tweakable names).
     static func values(in text: String) -> [String: String] {
         var result: [String: String] = [:]
         for raw in text.split(whereSeparator: \.isNewline) {
@@ -67,42 +67,55 @@ enum ProfileFile {
                 if parts.count == 2 { result[parts[0]] = parts[1] }
             } else if line.hasPrefix("sres ") {
                 result["sres"] = line.dropFirst(5).split(separator: "x").first.map(String.init)
-            } else if line.hasPrefix("res "), let open = line.firstIndex(of: "("), let close = line.firstIndex(of: "x", after: open) {
-                result["msaa"] = String(line[line.index(after: open)..<close])
             }
         }
         return result
     }
 }
 
-private extension String {
-    func firstIndex(of character: Character, after index: Index) -> Index? {
-        self[self.index(after: index)...].firstIndex(of: character)
+/// Zwift's prefs.xml: only USER_RESOLUTION_PREF is touched, the rest of the file is left as it is.
+/// After the profile, the game runs `res <value>` with it, so it's where the render resolution has to go.
+enum PrefsFile {
+    static func resolution(in text: String) -> String? {
+        text.firstMatch(of: #/<USER_RESOLUTION_PREF>([^<]*)</USER_RESOLUTION_PREF>/#).map { String($0.1) }
+    }
+
+    static func settingResolution(_ text: String, to value: String) -> String {
+        text.replacing(#/<USER_RESOLUTION_PREF>[^<]*</USER_RESOLUTION_PREF>/#, with: "<USER_RESOLUTION_PREF>\(value)</USER_RESOLUTION_PREF>")
     }
 }
 
 struct ConfigPlan {
     var lines: [String] = []
-    /// Settings that couldn't be written (MSAA without a known resolution).
-    var skipped: [String] = []
+    /// USER_RESOLUTION_PREF to write in prefs.xml; nil puts back the menu's choice.
+    var resolution: String?
 
-    init(values: [String: String], resolution: String?) {
+    init(values: [String: String]) {
         // Commands first, then tweakables, in catalog order: stable output, easy to compare.
         let ordered = Catalog.all.filter { $0.command != .tweakable } + Catalog.all.filter { $0.command == .tweakable }
         for def in ordered {
             guard let value = values[def.key] else { continue }
-            if let line = def.line(for: value, resolution: resolution) {
+            if def.command == .renderResolution {
+                resolution = value
+            } else if let line = def.line(for: value) {
                 lines.append(line)
-            } else {
-                skipped.append(def.key)
             }
         }
     }
 
     var preview: String {
-        guard !lines.isEmpty else { return L("No changes: Zwift's profiles are restored and the game decides.") }
-        let files = ProfileFile.names.map { "\($0).txt" }.joined(separator: ", ")
-        return "# " + L("Appended to \(files)") + "\n" + lines.joined(separator: "\n")
+        guard !lines.isEmpty || resolution != nil else {
+            return L("No changes: Zwift's profiles and the menu's resolution are restored, and the game decides.")
+        }
+        var parts: [String] = []
+        if let resolution {
+            parts.append("# prefs.xml\nUSER_RESOLUTION_PREF = \(resolution)")
+        }
+        if !lines.isEmpty {
+            let files = ProfileFile.names.map { "\($0).txt" }.joined(separator: ", ")
+            parts.append("# " + L("Appended to \(files)") + "\n" + lines.joined(separator: "\n"))
+        }
+        return parts.joined(separator: "\n\n")
     }
 }
 
@@ -112,23 +125,21 @@ struct GameSnapshot {
     /// Profile Zwift picked at its last launch ("ultra", …), from Log.txt.
     var profileName: String?
     var gpu: String?
-    /// Resolution chosen in the game's menu, from prefs.xml (e.g. "3840x2160").
-    var resolution: String?
+    /// Resolution chosen in the game's menu, from prefs.xml (e.g. "3840x2160"), without this app's value.
+    var menuResolution: String?
     /// Values the chosen profile sets on its own, before this app's lines.
     var profileValues: [String: String] = [:]
     /// Console commands Zwift ran from the profile at its last launch.
     var lastLaunchCommands: [String] = []
-    /// Variables the game reported as unknown at its last launch.
-    var unknownVariables: [String] = []
+    /// Profile lines the game refused at its last launch (unknown variables or commands, syntax errors).
+    var rejected: [String] = []
 
     static func load() -> GameSnapshot {
         var snapshot = GameSnapshot()
         if let log = try? String(contentsOf: GamePaths.gameLog, encoding: .utf8) {
             snapshot.read(log: log)
         }
-        if let prefs = try? String(contentsOf: GamePaths.prefs, encoding: .utf8) {
-            snapshot.resolution = prefs.firstMatch(of: #/<USER_RESOLUTION_PREF>(\d+x\d+)</#).map { String($0.1) }
-        }
+        snapshot.menuResolution = ConfigWriter.menuResolution()
         if let pointer = try? String(contentsOf: GamePaths.installDir.appendingPathComponent("Zwift_ver_cur_filename.txt"), encoding: .utf8),
            let verCur = try? String(contentsOf: GamePaths.installDir.appendingPathComponent(pointer.trimmingCharacters(in: .whitespacesAndNewlines)), encoding: .utf8) {
             snapshot.version = verCur.firstMatch(of: #/sversion="([^"]+)"/#).map { String($0.1) }
@@ -148,18 +159,37 @@ struct GameSnapshot {
         gpu = lines.last { $0.contains("Graphics Renderer:") }?
             .components(separatedBy: "Graphics Renderer:").last?.trimmingCharacters(in: .whitespaces)
         lastLaunchCommands = []
-        unknownVariables = []
+        rejected = []
+        // A line that isn't a known command is first tried as `set` (a syntax error), then reported as an unknown
+        // command without being echoed: the syntax error belongs to that line, not to the previous `> …` one.
+        var syntaxError = false
+        func flushSyntaxError() {
+            if syntaxError { rejected.append(L("a line with a syntax error")) }
+            syntaxError = false
+        }
         for line in lines[(start + 1)...].prefix(200) {
             if let command = line.firstMatch(of: #/\] > (.+)$/#) {
+                flushSyntaxError()
                 lastLaunchCommands.append(String(command.1))
+            } else if let unknown = line.firstMatch(of: #/Unknown command "([^"]+)"/#) {
+                syntaxError = false
+                rejected.append(String(unknown.1))
             } else if let unknown = line.firstMatch(of: #/Variable "([^"]+)" not found/#) {
-                unknownVariables.append(String(unknown.1))
+                rejected.append(String(unknown.1))
+            } else if let failed = line.firstMatch(of: #/Error setting ([^.]+)\./#) {
+                rejected.append(String(failed.1))
+            } else if line.contains("Syntax Error") {
+                syntaxError = true
             }
         }
+        flushSyntaxError()
     }
 
     /// Describes the value the game uses when the app doesn't force `def`.
     func describe(_ def: SettingDef) -> String {
+        if def.command == .renderResolution {
+            return menuResolution.map { L("game menu: \(def.label(for: $0))") } ?? L("game menu: not saved yet")
+        }
         if let value = profileValues[def.key] {
             return L("profile \(profileName ?? "ultra"): \(def.label(for: value))")
         }
@@ -186,6 +216,7 @@ enum ConfigError: LocalizedError {
 
 enum ConfigWriter {
     private static func lastWrittenKey(_ name: String) -> String { "lastWritten.\(name)" }
+    private static let originalResolutionKey = "originalResolution"
 
     static func checkAccess() -> ConfigError? {
         let fm = FileManager.default
@@ -227,7 +258,44 @@ enum ConfigWriter {
                 throw ConfigError.io(L("Couldn't write \(name).txt: \(error.localizedDescription)"))
             }
         }
-        Log.write("Applied \(plan.lines.count) lines to \(ProfileFile.names.count) profiles")
+        try applyResolution(plan.resolution)
+        Log.write("Applied \(plan.lines.count) lines to \(ProfileFile.names.count) profiles, resolution \(plan.resolution ?? "from the menu")")
+    }
+
+    /// The resolution chosen in Zwift's menu: the value saved before this app changed it, unless the game has saved a new one since.
+    static func menuResolution() -> String? {
+        guard let text = try? String(contentsOf: GamePaths.prefs, encoding: .utf8),
+              let current = PrefsFile.resolution(in: text) else { return nil }
+        return ProfileFile.original(current: current,
+                                    backup: UserDefaults.standard.string(forKey: originalResolutionKey),
+                                    lastWritten: UserDefaults.standard.string(forKey: lastWrittenKey("resolution")))
+    }
+
+    private static func applyResolution(_ value: String?) throws {
+        guard let text = try? String(contentsOf: GamePaths.prefs, encoding: .utf8),
+              let current = PrefsFile.resolution(in: text), let original = menuResolution() else {
+            if value != nil { throw ConfigError.io(L("Zwift's prefs.xml has no resolution yet: pick one in Zwift's menu once.")) }
+            return
+        }
+        let target = value ?? original
+        if target != current {
+            let backup = GamePaths.prefs.appendingPathExtension("pimpmyzwift.bak")
+            do {
+                if !FileManager.default.fileExists(atPath: backup.path) {
+                    try FileManager.default.copyItem(at: GamePaths.prefs, to: backup)
+                }
+                try write(PrefsFile.settingResolution(text, to: target), to: GamePaths.prefs)
+            } catch {
+                throw ConfigError.io(L("Couldn't write prefs.xml: \(error.localizedDescription)"))
+            }
+        }
+        if value == nil {
+            UserDefaults.standard.removeObject(forKey: originalResolutionKey)
+            UserDefaults.standard.removeObject(forKey: lastWrittenKey("resolution"))
+        } else {
+            UserDefaults.standard.set(original, forKey: originalResolutionKey)
+            UserDefaults.standard.set(target, forKey: lastWrittenKey("resolution"))
+        }
     }
 
     private static func write(_ text: String, to url: URL) throws {

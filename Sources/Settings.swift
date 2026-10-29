@@ -5,14 +5,14 @@ func L(_ value: String.LocalizationValue) -> String {
     String(localized: value)
 }
 
-/// How a setting is written into a graphics profile.
+/// How a setting is written.
 enum ProfileCommand {
-    /// `set NAME=VALUE`: one of the game's tweakable variables.
+    /// `set NAME=VALUE` in the graphics profiles: one of the game's tweakable variables.
     case tweakable
-    /// `sres WxH`: shadow map resolution.
+    /// `sres WxH` in the graphics profiles: shadow map resolution.
     case shadowResolution
-    /// `res WxH(Nx)`: multisample anti-aliasing, written with the resolution chosen in the game's menu.
-    case msaa
+    /// USER_RESOLUTION_PREF in prefs.xml: the game runs `res <value>` after the profile, so a profile line would be overridden.
+    case renderResolution
 }
 
 struct Option: Hashable {
@@ -58,16 +58,15 @@ struct SettingDef: Identifiable {
         }
     }
 
-    /// The profile line for a value, e.g. `set gSSR=1` or `sres 4096x4096`.
-    func line(for value: String, resolution: String?) -> String? {
+    /// The profile line for a value, e.g. `set gSSR=1` or `sres 4096x4096`; nil for settings written elsewhere.
+    func line(for value: String) -> String? {
         switch command {
         case .tweakable:
             return "set \(key)=\(value)"
         case .shadowResolution:
             return "sres \(value)x\(value)"
-        case .msaa:
-            // Without the menu's resolution the line would change it: better not to write it at all.
-            return resolution.map { "res \($0)(\(value)x)" }
+        case .renderResolution:
+            return nil
         }
     }
 
@@ -77,12 +76,12 @@ struct SettingDef: Identifiable {
 }
 
 enum SettingSection: String, CaseIterable, Identifiable {
-    case antiAliasing, detail, effects, display
+    case resolution, detail, effects, display
     var id: String { rawValue }
 
     var title: String {
         switch self {
-        case .antiAliasing: return L("Anti-aliasing & shadows")
+        case .resolution: return L("Resolution & shadows")
         case .detail: return L("Detail")
         case .effects: return L("Effects")
         case .display: return L("HUD & display")
@@ -91,7 +90,7 @@ enum SettingSection: String, CaseIterable, Identifiable {
 
     var symbol: String {
         switch self {
-        case .antiAliasing: return "viewfinder"
+        case .resolution: return "viewfinder"
         case .detail: return "mountain.2"
         case .effects: return "sparkles"
         case .display: return "macwindow"
@@ -100,8 +99,8 @@ enum SettingSection: String, CaseIterable, Identifiable {
 
     var note: String? {
         switch self {
-        case .antiAliasing:
-            return L("Zwift picks a graphics profile (basic, medium, high or ultra) from its own list of GPUs, then applies the resolution chosen in its menu. The menu has no anti-aliasing or shadow settings.")
+        case .resolution:
+            return L("Zwift picks a graphics profile (basic, medium, high or ultra) from its own list of GPUs, then applies the resolution chosen in its menu. The game accepts resolutions up to 5120×2880, beyond the menu's 4K: rendering more pixels than the display has and scaling them down gives a sharper image. MSAA isn't offered: on the Mac it was tested on (M2 Max) the game refused it, even at 2×.")
         case .detail:
             return L("Zwift's lower profiles halve the foliage and raise the level-of-detail bias; ultra leaves both at full detail, which is also the most the game allows.")
         default:
@@ -123,19 +122,21 @@ private func tweak(_ key: String, _ title: String, _ section: SettingSection, _ 
 
 enum Catalog {
     static let all: [SettingDef] = [
-        // Anti-aliasing & shadows
-        SettingDef(key: "msaa", title: L("MSAA"),
-                   help: L("Written as \"res WIDTHxHEIGHT(Nx)\", using the resolution chosen in Zwift's menu (USER_RESOLUTION_PREF in prefs.xml)."),
-                   section: .antiAliasing, control: .choice([
-                       Option(value: "0", label: L("Off")), Option(value: "4", label: "4×"),
-                   ]), command: .msaa),
-        tweak("gFXAA", "FXAA", .antiAliasing),
+        // Resolution & shadows
+        SettingDef(key: "resolution", title: L("Render resolution"),
+                   help: L("USER_RESOLUTION_PREF in ~/Documents/Zwift/prefs.xml, the value Zwift's menu saves. The game accepts 320×240 to 5120×2880."),
+                   section: .resolution, control: .choice([
+                       Option(value: "1920x1080", label: "1920×1080"), Option(value: "2560x1440", label: "2560×1440"),
+                       Option(value: "3840x2160", label: L("3840×2160 (menu maximum)")),
+                       Option(value: "4480x2520", label: "4480×2520"), Option(value: "5120x2880", label: L("5120×2880 (game maximum)")),
+                   ]), command: .renderResolution),
+        tweak("gFXAA", "FXAA", .resolution),
         SettingDef(key: "sres", title: L("Shadow resolution"),
                    help: L("Written as \"sres SIZExSIZE\". Zwift's profiles use 512 (basic) to 2048 (ultra)."),
-                   section: .antiAliasing, control: .choice(["1024", "2048", "4096", "8192"].map { Option(value: $0, label: "\($0)×\($0)") }),
+                   section: .resolution, control: .choice(["1024", "2048", "4096", "8192"].map { Option(value: $0, label: "\($0)×\($0)") }),
                    command: .shadowResolution),
-        tweak("gForceBikeShadows", L("Shadows on every bike"), .antiAliasing),
-        tweak("g_BikeMaxShadowCascade", L("Bike shadow cascades"), .antiAliasing,
+        tweak("gForceBikeShadows", L("Shadows on every bike"), .resolution),
+        tweak("g_BikeMaxShadowCascade", L("Bike shadow cascades"), .resolution,
               .choice(["1", "2", "3", "4"].map { Option(value: $0, label: $0) })),
 
         // Detail
@@ -188,9 +189,9 @@ struct Preset: Identifiable, Hashable {
     }
 
     static let builtIn: [Preset] = [
-        Preset(id: "max", name: L("Max"), summary: L("Everything Zwift can do on a powerful Mac: 4096 shadows, bike shadows further away, reflections and sun rays at full detail."),
+        Preset(id: "max", name: L("Max"), summary: L("Everything Zwift can do on a powerful Mac: rendering at 5120×2880, 4096 shadows, bike shadows further away, reflections and sun rays at full detail."),
                values: [
-                   "sres": "4096", "gFXAA": "1", "gForceBikeShadows": "1", "g_BikeMaxShadowCascade": "2",
+                   "resolution": "5120x2880", "sres": "4096", "gFXAA": "1", "gForceBikeShadows": "1", "g_BikeMaxShadowCascade": "2",
                    "gLODBias": "0", "gFoliagePercent": "1.00",
                    "gSSR": "1", "gSimpleReflections": "0", "gSunRays": "1", "gHeadlight": "1",
                ]),

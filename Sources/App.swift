@@ -64,7 +64,7 @@ final class AppState: ObservableObject {
         refresh()
     }
 
-    var plan: ConfigPlan { ConfigPlan(values: values, resolution: snapshot.resolution) }
+    var plan: ConfigPlan { ConfigPlan(values: values) }
 
     var currentPreset: Preset {
         Preset.builtIn.first { $0.id == presetID } ?? .custom

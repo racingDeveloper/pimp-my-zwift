@@ -11,7 +11,7 @@ let ultra = "res 1920x1080(0x)\nsres 2048x2048\nset gSSAO=1\nset gFXAA=1\n"
 // 1. Game default: nothing forced → profile unchanged
 check("game default leaves profile untouched", ProfileFile.compose(ultra, lines: []) == ultra)
 // 2. Max preset: lines appended after the original, in a stable order
-let max = ConfigPlan(values: Catalog.validated(Preset.builtIn.first { $0.id == "max" }!.values), resolution: "3840x2160")
+let max = ConfigPlan(values: Catalog.validated(Preset.builtIn.first { $0.id == "max" }!.values))
 let composed = ProfileFile.compose(ultra, lines: max.lines)
 check("original kept at the top", composed.hasPrefix(ultra))
 check("shadow line before tweakables", max.lines.first == "sres 4096x4096")
@@ -23,7 +23,7 @@ check("windows line endings kept", ProfileFile.compose("sres 2048x2048\r\nset gF
       == "sres 2048x2048\r\nset gFXAA=1\r\nset gSSR=1\r\nset gSunRays=1\r\n")
 check("windows file without final newline", ProfileFile.compose("sres 512x512\r\nset gLODBias=1", lines: ["set gSSR=1"])
       == "sres 512x512\r\nset gLODBias=1\r\nset gSSR=1\r\n")
-check("windows profile parsed", ProfileFile.values(in: "res 1920x1080(0x)\r\nsres 2048x2048\r\nset gFXAA=1\r\n") == ["msaa": "0", "sres": "2048", "gFXAA": "1"])
+check("windows profile parsed", ProfileFile.values(in: "res 1920x1080(0x)\r\nsres 2048x2048\r\nset gFXAA=1\r\n") == ["sres": "2048", "gFXAA": "1"])
 // 3. The original is recovered from the backup only while the file still holds what the app wrote
 check("our own file → backup", ProfileFile.original(current: composed, backup: ultra, lastWritten: composed) == ultra)
 let updated = "res 1920x1080(0x)\nsres 2048x2048\nset gSSAO=1\n"
@@ -32,13 +32,19 @@ check("no backup → file", ProfileFile.original(current: ultra, backup: nil, la
 // 4. Re-applying never stacks lines
 let again = ProfileFile.compose(ProfileFile.original(current: composed, backup: ultra, lastWritten: composed), lines: max.lines)
 check("idempotent", again == composed)
-// 5. MSAA needs the menu's resolution
-check("msaa uses the menu resolution", ConfigPlan(values: ["msaa": "4"], resolution: "3840x2160").lines == ["res 3840x2160(4x)"])
-let noRes = ConfigPlan(values: ["msaa": "4", "gSSR": "1"], resolution: nil)
-check("msaa skipped without resolution", noRes.lines == ["set gSSR=1"] && noRes.skipped == ["msaa"])
+// 5. The render resolution goes to prefs.xml, not to the profiles (the game applies prefs.xml after them)
+check("resolution kept out of profiles", max.resolution == "5120x2880" && !max.lines.contains { $0.hasPrefix("res ") })
+let prefs = "<ZWIFT>\n    <CONFIG>\n        <USER_RESOLUTION_PREF>5120x2880(2x)</USER_RESOLUTION_PREF>\n        <FULLSCREEN>1</FULLSCREEN>\n    </CONFIG>\n</ZWIFT>\n"
+check("prefs resolution read", PrefsFile.resolution(in: prefs) == "5120x2880(2x)")
+let newPrefs = PrefsFile.settingResolution(prefs, to: "4480x2520")
+check("prefs resolution replaced, rest kept", PrefsFile.resolution(in: newPrefs) == "4480x2520"
+      && newPrefs == prefs.replacingOccurrences(of: "5120x2880(2x)", with: "4480x2520"))
+check("menu resolution recovered while ours is in place", ProfileFile.original(current: "5120x2880", backup: "3840x2160", lastWritten: "5120x2880") == "3840x2160")
+check("menu resolution changed in game wins", ProfileFile.original(current: "2560x1440", backup: "3840x2160", lastWritten: "5120x2880") == "2560x1440")
+check("resolution limited to what the game accepts", Catalog.validated(["resolution": "7680x4320"]).isEmpty && Catalog.validated(["resolution": "5120x2880"]).count == 1)
 // 6. Reading a profile back
 let parsed = ProfileFile.values(in: ultra + "set gFoliagePercent=0.5\n")
-check("profile values parsed", parsed == ["msaa": "0", "sres": "2048", "gSSAO": "1", "gFXAA": "1", "gFoliagePercent": "0.5"])
+check("profile values parsed", parsed == ["sres": "2048", "gSSAO": "1", "gFXAA": "1", "gFoliagePercent": "0.5"])
 // 7. Reading Zwift's log
 var snapshot = GameSnapshot()
 snapshot.read(log: """
@@ -51,12 +57,20 @@ snapshot.read(log: """
 [17:48:56] > set gSSAO=1
 [17:48:56] > set nAIBikes=24
 [17:48:56] Error: Variable "nAIBikes" not found!
+[17:48:56] > set gShowFPS=1
+[17:48:56] Syntax Error.  USAGE: set VARNAME=VALUE
+[17:48:56] Type 'listvars' for list of tweakable variables
+[17:48:56] Unknown command "listvars"
+[17:48:56] > set gBloom=x
+[17:48:56] Syntax Error.  USAGE: set VARNAME=VALUE
+[17:48:56] > res 3840x2160
 [17:48:56] Graphics Renderer: Apple M2 Max
 """)
 check("last profile wins", snapshot.profileName == "ultra")
 check("gpu read", snapshot.gpu == "Apple M2 Max")
-check("commands of the last launch only", snapshot.lastLaunchCommands == ["res 1920x1080(0x)", "set gSSAO=1", "set nAIBikes=24"])
-check("unknown variables reported", snapshot.unknownVariables == ["nAIBikes"])
+check("commands of the last launch only", snapshot.lastLaunchCommands == ["res 1920x1080(0x)", "set gSSAO=1", "set nAIBikes=24", "set gShowFPS=1", "set gBloom=x", "res 3840x2160"])
+check("rejected lines reported, syntax error of an unknown command not blamed on the previous line",
+      snapshot.rejected == ["nAIBikes", "listvars", "a line with a syntax error"])
 // 8. Validation rejects out-of-range and snaps sliders
 check("invalid values dropped", Catalog.validated(["sres": "3000", "gSSR": "2", "gSSAO": "1", "foo": "1"]).isEmpty)
 check("negative LOD bias rejected (the game turns it into 2)", Catalog.validated(["gLODBias": "-1"]).isEmpty)

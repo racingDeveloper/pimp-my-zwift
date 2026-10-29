@@ -119,8 +119,8 @@ struct OverviewPane: View {
             }
 
             Section("What will be applied") {
+                LabeledContent("Render resolution", value: resolutionSummary)
                 LabeledContent("Shadow resolution", value: state.values["sres"].map { "\($0)×\($0)" } ?? L("game decides"))
-                LabeledContent("MSAA", value: msaaSummary)
                 LabeledContent("Forced values", value: L("\(String(state.values.count)) of \(String(Catalog.all.count))"))
             }
 
@@ -139,11 +139,9 @@ struct OverviewPane: View {
         .navigationTitle("Overview")
     }
 
-    private var msaaSummary: String {
-        guard let samples = state.values["msaa"] else { return L("game decides") }
-        if samples == "0" { return L("Off") }
-        guard let resolution = state.snapshot.resolution else { return L("not written: resolution unknown") }
-        return L("\(samples)× at \(resolution)")
+    private var resolutionSummary: String {
+        if let forced = state.values["resolution"], let def = Catalog.byKey["resolution"] { return def.label(for: forced) }
+        return state.snapshot.menuResolution.map { L("game menu: \($0)") } ?? L("game decides")
     }
 }
 
@@ -155,10 +153,10 @@ private struct LastLaunchSection: View {
             LabeledContent("Zwift version", value: snapshot.version ?? L("unknown"))
             LabeledContent("GPU", value: snapshot.gpu ?? L("unknown"))
             LabeledContent("Profile in use", value: snapshot.profileName ?? L("unknown"))
-            LabeledContent("Resolution (game menu)", value: snapshot.resolution ?? L("unknown"))
-            if !snapshot.unknownVariables.isEmpty {
+            LabeledContent("Resolution (game menu)", value: snapshot.menuResolution ?? L("unknown"))
+            if !snapshot.rejected.isEmpty {
                 Label {
-                    Text("Zwift didn't recognize: \(snapshot.unknownVariables.joined(separator: ", "))")
+                    Text("Zwift rejected: \(snapshot.rejected.joined(separator: ", "))")
                 } icon: {
                     Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
                 }

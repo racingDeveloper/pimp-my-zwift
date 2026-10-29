@@ -23,12 +23,9 @@
 "A preset fills in every section; you can then fine-tune individual settings." = "Un preset riempie tutte le sezioni; poi puoi ritoccare le singole voci.";
 "What will be applied" = "Cosa verrà applicato";
 "Shadow resolution" = "Risoluzione delle ombre";
-"MSAA" = "MSAA";
 "Forced values" = "Valori forzati";
 "%@ of %@" = "%@ su %@";
 "game decides" = "decide il gioco";
-"not written: resolution unknown" = "non scritto: risoluzione sconosciuta";
-"%@× at %@" = "%@× a %@";
 "Launch" = "Avvio";
 "Quit Pimp My Zwift after launching" = "Chiudi Pimp My Zwift dopo l'avvio";
 "The settings are appended to all of Zwift's graphics profiles, so they apply whichever one the game picks. A .pimpmyzwift.bak copy of each original profile is kept, and \"Game default\" restores it. A Zwift update can replace the profiles: launching from here writes them again." = "Le impostazioni vengono aggiunte a tutti i profili grafici di Zwift, così valgono qualunque profilo scelga il gioco. Di ogni profilo originale viene tenuta una copia .pimpmyzwift.bak, che \"Default del gioco\" ripristina. Un aggiornamento di Zwift può sostituire i profili: avviando da qui vengono riscritti.";
@@ -40,13 +37,11 @@
 "Profile in use" = "Profilo in uso";
 "Resolution (game menu)" = "Risoluzione (menu del gioco)";
 "unknown" = "sconosciuto";
-"Zwift didn't recognize: %@" = "Zwift non ha riconosciuto: %@";
 "Commands applied at the last launch (%@)" = "Comandi applicati all'ultimo avvio (%@)";
 "Read from Zwift's log and prefs.xml. Launch the game once after saving to check that every line was applied." = "Letto dal log di Zwift e da prefs.xml. Dopo aver salvato, avvia il gioco una volta per verificare che ogni riga sia stata applicata.";
 
 /* Presets */
 "Max" = "Massimo";
-"Everything Zwift can do on a powerful Mac: 4096 shadows, bike shadows further away, reflections and sun rays at full detail." = "Tutto quello che Zwift sa fare su un Mac potente: ombre a 4096, ombre delle bici più lontano, riflessi e raggi del sole, dettaglio pieno.";
 "Balanced" = "Bilanciato";
 "Zwift's ultra profile with screen-space reflections on." = "Il profilo ultra di Zwift con i riflessi in screen space accesi.";
 "Performance" = "Prestazioni";
@@ -57,11 +52,9 @@
 "Hand-tuned values, remembered for the next launches." = "Valori scelti a mano, ricordati per i prossimi avvii.";
 
 /* Sections */
-"Anti-aliasing & shadows" = "Antialiasing e ombre";
 "Detail" = "Dettaglio";
 "Effects" = "Effetti";
 "HUD & display" = "HUD e schermo";
-"Zwift picks a graphics profile (basic, medium, high or ultra) from its own list of GPUs, then applies the resolution chosen in its menu. The menu has no anti-aliasing or shadow settings." = "Zwift sceglie un profilo grafico (basic, medium, high o ultra) dalla sua lista di GPU, poi applica la risoluzione scelta nel suo menu. Il menu non ha impostazioni per antialiasing e ombre.";
 "Zwift's lower profiles halve the foliage and raise the level-of-detail bias; ultra leaves both at full detail, which is also the most the game allows." = "I profili più bassi di Zwift dimezzano la vegetazione e alzano il bias del livello di dettaglio; ultra li lascia entrambi al dettaglio pieno, che è anche il massimo consentito dal gioco.";
 "Force nothing in this section" = "Non forzare niente in questa sezione";
 "Let the game decide every setting in this section" = "Lascia decidere al gioco tutte le voci di questa sezione";
@@ -112,11 +105,9 @@
 "%@ s" = "%@ s";
 
 /* Setting help */
-"Written as \"res WIDTHxHEIGHT(Nx)\", using the resolution chosen in Zwift's menu (USER_RESOLUTION_PREF in prefs.xml)." = "Scritto come \"res LARGHEZZAxALTEZZA(Nx)\", con la risoluzione scelta nel menu di Zwift (USER_RESOLUTION_PREF in prefs.xml).";
 "Written as \"sres SIZExSIZE\". Zwift's profiles use 512 (basic) to 2048 (ultra)." = "Scritto come \"sres LATOxLATO\". I profili di Zwift vanno da 512 (basic) a 2048 (ultra).";
 
 /* Setting details */
-"Multisample anti-aliasing smooths the edges of geometry (bikes, riders, barriers) better than FXAA, at a high GPU cost. Zwift's profiles turn it off. The resolution set in Zwift's menu is applied after the profile without an MSAA value: whether MSAA survives that is unverified. Check the log for \"Changed resolution\". If the game already renders at a higher resolution than the display, the gain is small." = "L'antialiasing multisample leviga i bordi della geometria (bici, ciclisti, transenne) meglio dell'FXAA, con un costo alto per la GPU. I profili di Zwift lo spengono. La risoluzione scelta nel menu di Zwift viene applicata dopo il profilo senza un valore MSAA: non è verificato che l'MSAA sopravviva. Controlla nel log le righe \"Changed resolution\". Se il gioco renderizza già a una risoluzione più alta dello schermo, il guadagno è piccolo.";
 "Fast anti-aliasing applied to the final image: smooths edges almost for free, but makes the image a little softer. On in every Zwift profile." = "Antialiasing veloce applicato all'immagine finale: leviga i bordi quasi gratis, ma rende l'immagine un po' più morbida. Acceso in tutti i profili di Zwift.";
 "Size of the sun's shadow map. 4096 makes the shadows of trees, riders and buildings on the road noticeably sharper; 8192 is very heavy on GPU memory and goes beyond what Zwift itself uses." = "Dimensione della mappa delle ombre del sole. 4096 rende molto più nitide le ombre di alberi, ciclisti ed edifici sulla strada; 8192 pesa molto sulla memoria della GPU e va oltre quello che usa Zwift.";
 "Bikes cast shadows only when an internal hardware flag allows it; this forces them on regardless. On a Mac where Zwift already draws bike shadows it changes nothing." = "Le bici proiettano ombre solo se un flag interno legato all'hardware lo permette; questa opzione le forza comunque. Su un Mac dove Zwift disegna già le ombre delle bici non cambia nulla.";
@@ -147,5 +138,21 @@
 "Zwift's graphics profiles weren't found in ~/Library/Application Support/Zwift: install Zwift and launch it at least once." = "I profili grafici di Zwift non sono stati trovati in ~/Library/Application Support/Zwift: installa Zwift e avvialo almeno una volta.";
 "Couldn't open %@.txt for writing: %@" = "Impossibile aprire %@.txt in scrittura: %@";
 "Couldn't write %@.txt: %@" = "Impossibile scrivere %@.txt: %@";
-"No changes: Zwift's profiles are restored and the game decides." = "Nessuna modifica: i profili di Zwift vengono ripristinati e decide il gioco.";
 "Appended to %@" = "Aggiunto in fondo a %@";
+
+/* Render resolution */
+"Resolution & shadows" = "Risoluzione e ombre";
+"Render resolution" = "Risoluzione di rendering";
+"3840×2160 (menu maximum)" = "3840×2160 (massimo del menu)";
+"5120×2880 (game maximum)" = "5120×2880 (massimo del gioco)";
+"game menu: %@" = "menu del gioco: %@";
+"game menu: not saved yet" = "menu del gioco: non ancora salvata";
+"USER_RESOLUTION_PREF in ~/Documents/Zwift/prefs.xml, the value Zwift's menu saves. The game accepts 320×240 to 5120×2880." = "USER_RESOLUTION_PREF in ~/Documents/Zwift/prefs.xml, il valore che salva il menu di Zwift. Il gioco accetta da 320×240 a 5120×2880.";
+"Zwift picks a graphics profile (basic, medium, high or ultra) from its own list of GPUs, then applies the resolution chosen in its menu. The game accepts resolutions up to 5120×2880, beyond the menu's 4K: rendering more pixels than the display has and scaling them down gives a sharper image. MSAA isn't offered: on the Mac it was tested on (M2 Max) the game refused it, even at 2×." = "Zwift sceglie un profilo grafico (basic, medium, high o ultra) dalla sua lista di GPU, poi applica la risoluzione scelta nel suo menu. Il gioco accetta risoluzioni fino a 5120×2880, oltre il 4K del menu: renderizzare più pixel di quelli dello schermo e ridurli dà un'immagine più nitida. L'MSAA non è offerto: sul Mac usato per le prove (M2 Max) il gioco l'ha rifiutato, anche a 2×.";
+"How many pixels the game renders. Zwift's menu stops at 3840×2160, but the game accepts up to 5120×2880 (checked: the log reports \"Changed resolution to 5120 x 2880\"). Rendering above the display's resolution and scaling down is supersampling: cleaner edges and finer detail, the biggest sharpness gain available. The GPU cost grows with the pixels: 5120×2880 is 1.8× the pixels of 4K. Pick a size with your display's aspect ratio. The game keeps the value in prefs.xml; choosing a resolution in Zwift's menu replaces it until the next launch from here." = "Quanti pixel renderizza il gioco. Il menu di Zwift si ferma a 3840×2160, ma il gioco accetta fino a 5120×2880 (verificato: il log riporta \"Changed resolution to 5120 x 2880\"). Renderizzare sopra la risoluzione dello schermo e ridurre è supersampling: bordi più puliti e dettagli più fini, il guadagno di nitidezza più grande disponibile. Il costo per la GPU cresce con i pixel: 5120×2880 sono 1,8 volte i pixel del 4K. Scegli una dimensione con le proporzioni del tuo schermo. Il gioco conserva il valore in prefs.xml; scegliere una risoluzione nel menu di Zwift lo sostituisce fino al prossimo avvio da qui.";
+"Everything Zwift can do on a powerful Mac: rendering at 5120×2880, 4096 shadows, bike shadows further away, reflections and sun rays at full detail." = "Tutto quello che Zwift sa fare su un Mac potente: rendering a 5120×2880, ombre a 4096, ombre delle bici più lontano, riflessi e raggi del sole, dettaglio pieno.";
+"No changes: Zwift's profiles and the menu's resolution are restored, and the game decides." = "Nessuna modifica: i profili di Zwift e la risoluzione del menu vengono ripristinati, e decide il gioco.";
+"Couldn't write prefs.xml: %@" = "Impossibile scrivere prefs.xml: %@";
+"Zwift's prefs.xml has no resolution yet: pick one in Zwift's menu once." = "prefs.xml di Zwift non ha ancora una risoluzione: scegline una nel menu di Zwift almeno una volta.";
+"Zwift rejected: %@" = "Zwift ha rifiutato: %@";
+"a line with a syntax error" = "una riga con un errore di sintassi";
