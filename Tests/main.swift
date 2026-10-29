@@ -15,7 +15,7 @@ let max = ConfigPlan(values: Catalog.validated(Preset.builtIn.first { $0.id == "
 let composed = ProfileFile.compose(ultra, lines: max.lines)
 check("original kept at the top", composed.hasPrefix(ultra))
 check("shadow line before tweakables", max.lines.first == "sres 4096x4096")
-check("tweakables written as set", max.lines.contains("set gSSR=1") && max.lines.contains("set gRadialBlur=0"))
+check("tweakables written as set", max.lines.contains("set gSSR=1") && max.lines.contains("set g_BikeMaxShadowCascade=2"))
 check("ends with a newline", composed.hasSuffix("\n") && !composed.hasSuffix("\n\n"))
 check("missing trailing newline handled", ProfileFile.compose("set gFXAA=1", lines: ["set gSSR=1"]) == "set gFXAA=1\nset gSSR=1\n")
 // 3. The original is recovered from the backup only while the file still holds what the app wrote
@@ -52,7 +52,9 @@ check("gpu read", snapshot.gpu == "Apple M2 Max")
 check("commands of the last launch only", snapshot.lastLaunchCommands == ["res 1920x1080(0x)", "set gSSAO=1", "set nAIBikes=24"])
 check("unknown variables reported", snapshot.unknownVariables == ["nAIBikes"])
 // 8. Validation rejects out-of-range and snaps sliders
-check("invalid values dropped", Catalog.validated(["sres": "3000", "gSSAO": "2", "foo": "1"]).isEmpty)
+check("invalid values dropped", Catalog.validated(["sres": "3000", "gSSR": "2", "gSSAO": "1", "foo": "1"]).isEmpty)
+check("negative LOD bias rejected (the game turns it into 2)", Catalog.validated(["gLODBias": "-1"]).isEmpty)
+check("foliage capped at 1", Catalog.validated(["gFoliagePercent": "1.25"]).isEmpty)
 check("slider snapped", Catalog.validated(["gFoliagePercent": "0.8", "gBloomStrength": "0.52"]) == ["gFoliagePercent": "0.75", "gBloomStrength": "0.50"])
 check("slider out of range dropped", Catalog.validated(["gFoliagePercent": "4"]).isEmpty)
 // 9. Every preset value is valid, and every tweakable has a game default

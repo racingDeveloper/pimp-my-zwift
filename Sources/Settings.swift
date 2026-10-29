@@ -58,7 +58,7 @@ struct SettingDef: Identifiable {
         }
     }
 
-    /// The profile line for a value, e.g. `set gSSAO=1` or `sres 4096x4096`.
+    /// The profile line for a value, e.g. `set gSSR=1` or `sres 4096x4096`.
     func line(for value: String, resolution: String?) -> String? {
         switch command {
         case .tweakable:
@@ -103,7 +103,7 @@ enum SettingSection: String, CaseIterable, Identifiable {
         case .antiAliasing:
             return L("Zwift picks a graphics profile (basic, medium, high or ultra) from its own list of GPUs, then applies the resolution chosen in its menu. The menu has no anti-aliasing or shadow settings.")
         case .detail:
-            return L("Zwift's lower profiles halve the foliage and raise the level-of-detail bias; ultra leaves both at the game's defaults.")
+            return L("Zwift's lower profiles halve the foliage and raise the level-of-detail bias; ultra leaves both at full detail, which is also the most the game allows.")
         default:
             return nil
         }
@@ -140,19 +140,18 @@ enum Catalog {
 
         // Detail
         tweak("gLODBias", L("Level-of-detail bias"), .detail, .choice([
-            Option(value: "-1", label: L("-1 · More detail")), Option(value: "0", label: L("0 · Normal")),
-            Option(value: "1", label: L("1 · Less detail")), Option(value: "2", label: L("2 · Much less detail")),
+            Option(value: "0", label: L("0 · Full detail")), Option(value: "1", label: L("1 · Less detail")),
+            Option(value: "2", label: L("2 · Much less detail")),
         ])),
-        tweak("gFoliagePercent", L("Foliage density"), .detail, .slider(min: 0.25, max: 1.5, step: 0.25, decimals: 2, unit: "×")),
+        // The game multiplies its foliage instance counts by this value: above 1 they would exceed what was loaded.
+        tweak("gFoliagePercent", L("Foliage density"), .detail, .slider(min: 0.25, max: 1, step: 0.25, decimals: 2, unit: "×")),
 
         // Effects
-        tweak("gSSAO", L("Ambient occlusion (SSAO)"), .effects),
         tweak("gSSR", L("Screen-space reflections"), .effects),
         tweak("gSimpleReflections", L("Simplified reflections"), .effects),
         tweak("gSunRays", L("Sun rays"), .effects),
         tweak("gBloom", L("Bloom"), .effects),
         tweak("gBloomStrength", L("Bloom strength"), .effects, .slider(min: 0, max: 1.5, step: 0.05, decimals: 2, unit: "")),
-        tweak("gRadialBlur", L("Radial blur"), .effects),
         tweak("gVignette", L("Vignette"), .effects),
         tweak("gAutoExposure", L("Auto exposure"), .effects),
         tweak("gHeadlight", L("Headlights"), .effects),
@@ -189,20 +188,19 @@ struct Preset: Identifiable, Hashable {
     }
 
     static let builtIn: [Preset] = [
-        Preset(id: "max", name: L("Max"), summary: L("Everything Zwift can do on a powerful Mac: 4096 shadows, ambient occlusion, reflections and sun rays, no radial blur."),
+        Preset(id: "max", name: L("Max"), summary: L("Everything Zwift can do on a powerful Mac: 4096 shadows, bike shadows further away, reflections and sun rays at full detail."),
                values: [
-                   "sres": "4096", "gFXAA": "1", "gForceBikeShadows": "1",
+                   "sres": "4096", "gFXAA": "1", "gForceBikeShadows": "1", "g_BikeMaxShadowCascade": "2",
                    "gLODBias": "0", "gFoliagePercent": "1.00",
-                   "gSSAO": "1", "gSSR": "1", "gSimpleReflections": "0", "gSunRays": "1", "gHeadlight": "1",
-                   "gRadialBlur": "0",
+                   "gSSR": "1", "gSimpleReflections": "0", "gSunRays": "1", "gHeadlight": "1",
                ]),
-        Preset(id: "balanced", name: L("Balanced"), summary: L("Like Zwift's ultra profile, with sun rays guaranteed and no radial blur."),
+        Preset(id: "balanced", name: L("Balanced"), summary: L("Zwift's ultra profile with screen-space reflections on."),
                values: [
-                   "sres": "2048", "gFXAA": "1", "gSSAO": "1", "gSunRays": "1", "gRadialBlur": "0",
+                   "sres": "2048", "gFXAA": "1", "gSSR": "1", "gSunRays": "1",
                ]),
         Preset(id: "performance", name: L("Performance"), summary: L("Zwift's medium profile with smaller shadows, for less powerful Macs or steadier FPS."),
                values: [
-                   "sres": "1024", "gFXAA": "1", "gSSAO": "0", "gSunRays": "0", "gHeadlight": "0",
+                   "sres": "1024", "gFXAA": "1", "gSunRays": "0", "gHeadlight": "0",
                    "gFoliagePercent": "0.50", "gSimpleReflections": "1", "gLODBias": "1",
                ]),
         Preset(id: "original", name: L("Game default"), summary: L("No changes: Zwift's own profiles, as if this app weren't there."),
